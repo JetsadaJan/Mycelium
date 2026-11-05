@@ -173,9 +173,27 @@ export const App: React.FC = () => {
     setActiveColony(vaultClient.getActiveColony());
   };
 
+  const pickNativeMacFolder = async () => {
+    try {
+      const res = await fetch('http://127.0.0.1:4174/api/fs/pick-folder', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        if (!data.cancelled && data.path) {
+          const snap = await vaultClient.openOrCreateDiskColony(data.name, data.path);
+          syncColonyState(snap);
+          if (snap.notes.length > 0) setActiveNoteId(snap.notes[0].id);
+          setShowColonyModal(false);
+          setInAppFolderBrowserOpen(false);
+        }
+      }
+    } catch {
+      setInAppNotice('Rust Core server is offline. Please make sure the app backend is active.');
+    }
+  };
+
   const browseDiskDirectory = async (targetPath = '') => {
     try {
-      const res = await fetch(`/api/fs/dirs?path=${encodeURIComponent(targetPath)}`);
+      const res = await fetch(`http://127.0.0.1:4174/api/fs/dirs?path=${encodeURIComponent(targetPath)}`);
       if (res.ok) {
         const data = await res.json();
         setBrowserDirData(data);
@@ -196,6 +214,35 @@ export const App: React.FC = () => {
     };
     return () => {
       window.alert = origAlert;
+    };
+  }, []);
+
+  useEffect(() => {
+    // Intercept external http/https/mailto links and open in the user's default system browser
+    const handleDocumentClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      const anchor = target?.closest?.('a') as HTMLAnchorElement | null;
+      if (!anchor) return;
+      const href = anchor.getAttribute('href')?.trim() || '';
+      if (
+        href.startsWith('http://') ||
+        href.startsWith('https://') ||
+        href.startsWith('mailto:')
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        fetch('http://127.0.0.1:4174/api/open-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: href }),
+        }).catch(() => {
+          window.open(href, '_blank', 'noopener,noreferrer');
+        });
+      }
+    };
+    document.addEventListener('click', handleDocumentClick, true);
+    return () => {
+      document.removeEventListener('click', handleDocumentClick, true);
     };
   }, []);
 
@@ -538,19 +585,29 @@ Start writing your Node content here, and connect related concepts using [[${
     );
   }
 
+  const isDesktopOverlay =
+    typeof window !== 'undefined' &&
+    ('__TAURI_INTERNALS__' in window ||
+      '__TAURI__' in window ||
+      !window.location.port ||
+      window.location.protocol === 'tauri:');
+
   return (
     <div className="app-shell">
       {/* Top Application Header */}
-      <header className="topbar">
-        <div className="brand-cluster">
+      <header
+        className={`topbar ${isDesktopOverlay ? 'topbar--macos-overlay' : ''}`}
+        data-tauri-drag-region
+      >
+        <div className="brand-cluster" data-tauri-drag-region>
           <button
             type="button"
             className="btn-subtle"
             onClick={() => setLeftSidebarOpen((v) => !v)}
             title={leftSidebarOpen ? 'Collapse Left Colony Explorer' : 'Expand Left Colony Explorer'}
-            style={{ padding: '6px 8px' }}
+            style={{ padding: '4px 6px' }}
           >
-            {leftSidebarOpen ? <PanelLeftClose size={14} /> : <PanelLeftOpen size={14} />}
+            {leftSidebarOpen ? <PanelLeftClose size={13} /> : <PanelLeftOpen size={13} />}
           </button>
 
           <div
@@ -564,12 +621,12 @@ Start writing your Node content here, and connect related concepts using [[${
             }}
           >
             <MyceliumLogoMark
-              size={22}
+              size={17}
               capColor={themeState.activeColors.logoCap}
               hyphaeColor={themeState.activeColors.logoHyphae}
             />
           </div>
-          <span className="brand-title">Mycelium</span>
+          <span className="brand-title" data-tauri-drag-region>Mycelium</span>
 
           {/* Colony Switcher Pill (Remembers Where Colonies Are) */}
           <button
@@ -577,25 +634,26 @@ Start writing your Node content here, and connect related concepts using [[${
             className="btn-subtle"
             onClick={() => setShowColonyModal(true)}
             title={`Active Colony Path: ${activeColony.path}`}
-            style={{ padding: '5px 12px' }}
+            style={{ padding: '3px 9px', fontSize: 11 }}
           >
-            <FolderOpen size={13} color="var(--verified-emerald)" />
+            <FolderOpen size={12} color="var(--verified-emerald)" />
             <span>{activeColony.name}</span>
             <span
               style={{
-                fontSize: 10.5,
+                fontSize: 10,
                 color: 'var(--text-muted)',
                 fontFamily: '"JetBrains Mono", monospace',
               }}
             >
               ({colonies.length})
             </span>
-            <ChevronDown size={13} />
+            <ChevronDown size={11} />
           </button>
 
           <span
+            data-tauri-drag-region
             style={{
-              fontSize: 12,
+              fontSize: 11,
               color: 'var(--text-muted)',
               fontFamily: '"JetBrains Mono", monospace',
             }}
@@ -619,7 +677,7 @@ Start writing your Node content here, and connect related concepts using [[${
               })
             }
           >
-            <BookOpen size={14} /> Read Node
+            <BookOpen size={12.5} /> Read Node
           </button>
           <button
             type="button"
@@ -631,12 +689,12 @@ Start writing your Node content here, and connect related concepts using [[${
               setArticleMode('write');
             }}
           >
-            <PenTool size={14} /> Write Node
+            <PenTool size={12.5} /> Write Node
             {viewStage === 'wiki' && articleMode === 'write' && writeDirtyState.isDirty && (
               <span
                 style={{
-                  width: 7,
-                  height: 7,
+                  width: 6,
+                  height: 6,
                   borderRadius: '50%',
                   background: 'var(--ai-amber)',
                   display: 'inline-block',
@@ -654,18 +712,19 @@ Start writing your Node content here, and connect related concepts using [[${
               })
             }
           >
-            <Network size={14} /> Colony Map
+            <Network size={12.5} /> Colony Map
           </button>
         </div>
 
         {/* Right Action Cluster (Consolidated into Studio Settings) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <button
             type="button"
             className="btn-primary"
+            style={{ padding: '3px 10px', fontSize: 11 }}
             onClick={() => guardUnsavedChanges(() => setShowNewNodeModal(true))}
           >
-            <Plus size={14} /> New Node (.md)
+            <Plus size={12.5} /> New Node (.md)
           </button>
 
           <button
@@ -673,9 +732,9 @@ Start writing your Node content here, and connect related concepts using [[${
             className="btn-subtle"
             onClick={() => setShowSettingsModal(true)}
             title="Open Studio Settings (Themes, Custom Colors, Vector Logo, AI Co-Pilot & Colony Tools)"
-            style={{ padding: '6px 12px', fontSize: 12, fontWeight: 600 }}
+            style={{ padding: '3px 9px', fontSize: 11, fontWeight: 600 }}
           >
-            <Settings size={14} color="var(--wiki-link)" /> Settings
+            <Settings size={12.5} color="var(--wiki-link)" /> Settings
           </button>
 
           {viewStage === 'wiki' && (
@@ -684,9 +743,9 @@ Start writing your Node content here, and connect related concepts using [[${
               className="btn-subtle"
               onClick={() => setRightSidebarOpen((v) => !v)}
               title={rightSidebarOpen ? 'Collapse Right Hyphae Inspector' : 'Expand Right Hyphae Inspector'}
-              style={{ padding: '6px 8px' }}
+              style={{ padding: '4px 6px' }}
             >
-              {rightSidebarOpen ? <PanelRightClose size={14} /> : <PanelRightOpen size={14} />}
+              {rightSidebarOpen ? <PanelRightClose size={13} /> : <PanelRightOpen size={13} />}
             </button>
           )}
         </div>
@@ -1339,7 +1398,45 @@ Start writing your Node content here, and connect related concepts using [[${
               </div>
             )}
 
-            {/* Add Local Disk Path or Browse Folder In-App */}
+            {/* Add Local Disk Path or Choose Native Folder */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '12px 16px',
+                borderRadius: 14,
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--border-strong)',
+                gap: 12,
+              }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
+                  Open Colony from Mac Finder
+                </span>
+                <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
+                  Choose any existing Colony or Markdown folder from macOS Finder dialog
+                </span>
+              </div>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={pickNativeMacFolder}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: 12.5,
+                  fontWeight: 600,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  flexShrink: 0,
+                }}
+              >
+                <FolderOpen size={14} /> Choose Colony Folder on Mac…
+              </button>
+            </div>
+
             <form
               onSubmit={handleOpenDiskColony}
               style={{
@@ -1350,8 +1447,17 @@ Start writing your Node content here, and connect related concepts using [[${
                 borderTop: '1px solid var(--border-subtle)',
               }}
             >
-              <div style={{ fontSize: 12.5, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <HardDrive size={14} /> Add or Open Colony by Local Disk Path
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: 'var(--text-secondary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <HardDrive size={13} /> Or enter Colony directory path manually:
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '0.8fr 1.2fr auto', gap: 8 }}>
                 <input
@@ -1371,7 +1477,7 @@ Start writing your Node content here, and connect related concepts using [[${
                   type="text"
                   value={newColonyPath}
                   onChange={(e) => setNewColonyPath(e.target.value)}
-                  placeholder="/Users/jayjetsada/Documents/MyObsidianVault"
+                  placeholder="/Users/jayjetsada/Documents/MyColony"
                   style={{
                     padding: '9px 12px',
                     borderRadius: 12,
@@ -1386,92 +1492,6 @@ Start writing your Node content here, and connect related concepts using [[${
                 </button>
               </div>
             </form>
-
-            {/* In-App Local Folder Browser (Eliminates Browser "localhost:5173 says" Upload Popup!) */}
-            {inAppFolderBrowserOpen && browserDirData && (
-              <div
-                style={{
-                  padding: 12,
-                  borderRadius: 14,
-                  background: 'var(--bg-panel)',
-                  border: '1px solid var(--border-subtle)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 8,
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                  <div style={{ fontSize: 11.5, fontFamily: '"JetBrains Mono", monospace', color: 'var(--wiki-link)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    📁 {browserDirData.current_path} ({browserDirData.md_count} .md files here)
-                  </div>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    {browserDirData.parent_path && (
-                      <button
-                        type="button"
-                        className="btn-subtle"
-                        style={{ padding: '3px 8px', fontSize: 11 }}
-                        onClick={() => browseDiskDirectory(browserDirData.parent_path!)}
-                      >
-                        ↑ Up Folder
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className="btn-primary"
-                      style={{ padding: '3px 10px', fontSize: 11 }}
-                      onClick={async () => {
-                        const folderName =
-                          browserDirData.current_path.split('/').filter(Boolean).pop() ||
-                          'Local Colony';
-                        const snap = await vaultClient.openOrCreateDiskColony(
-                          newColonyName.trim() || folderName,
-                          browserDirData.current_path
-                        );
-                        syncColonyState(snap);
-                        if (snap.notes.length > 0) setActiveNoteId(snap.notes[0].id);
-                        setInAppFolderBrowserOpen(false);
-                        setShowColonyModal(false);
-                      }}
-                    >
-                      Open This Folder as Colony
-                    </button>
-                  </div>
-                </div>
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(185px, 1fr))',
-                    gap: 6,
-                    maxHeight: 150,
-                    overflowY: 'auto',
-                  }}
-                >
-                  {browserDirData.directories.map((d) => (
-                    <button
-                      key={d.path}
-                      type="button"
-                      onClick={() => browseDiskDirectory(d.path)}
-                      className="btn-subtle"
-                      style={{
-                        justifyContent: 'space-between',
-                        padding: '6px 9px',
-                        fontSize: 11.5,
-                        textAlign: 'left',
-                      }}
-                    >
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        📁 {d.name}
-                      </span>
-                      {d.md_count > 0 && (
-                        <span style={{ fontSize: 10, color: 'var(--verified-emerald)', fontWeight: 700 }}>
-                          {d.md_count} .md
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* In-App Confirmation before Resetting Core Sample Colony */}
             {confirmResetSample && (
@@ -1513,22 +1533,7 @@ Start writing your Node content here, and connect related concepts using [[${
               </div>
             )}
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <button
-                type="button"
-                className="btn-subtle"
-                onClick={() => {
-                  if (inAppFolderBrowserOpen) {
-                    setInAppFolderBrowserOpen(false);
-                  } else {
-                    browseDiskDirectory('');
-                  }
-                }}
-              >
-                <FolderOpen size={13} />{' '}
-                {inAppFolderBrowserOpen ? 'Hide Folder Browser' : 'Browse Local Folders (In-App)...'}
-              </button>
-
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
               <button
                 type="button"
                 className="btn-subtle"

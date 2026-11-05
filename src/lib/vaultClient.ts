@@ -1,3 +1,9 @@
+export const API_BASE =
+  typeof window !== 'undefined' &&
+  (window.location.protocol === 'tauri:' || !window.location.port || window.location.port !== '5173')
+    ? 'http://127.0.0.1:4174'
+    : '';
+
 import {
   AiResearchRequest,
   AiResearchResponse,
@@ -451,7 +457,7 @@ class VaultClient {
     const active = this.getActiveColony();
     if (active.sourceType === 'disk') {
       try {
-        const res = await fetch('/api/vault');
+        const res = await fetch(`${API_BASE}/api/vault`);
         if (res.ok) {
           const snap: VaultSnapshot = await res.json();
           this.backendMode = 'rust-core';
@@ -479,7 +485,7 @@ class VaultClient {
 
     if (target.sourceType === 'disk') {
       try {
-        const res = await fetch('/api/colony/switch', {
+        const res = await fetch(`${API_BASE}/api/colony/switch`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ colony_path: target.path }),
@@ -528,7 +534,7 @@ class VaultClient {
     const active = this.getActiveColony();
     if (active.sourceType === 'disk') {
       try {
-        const res = await fetch('/api/note/save', {
+        const res = await fetch(`${API_BASE}/api/note/save`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ rel_path: relPath, raw_markdown: rawMarkdown }),
@@ -565,7 +571,7 @@ class VaultClient {
     const active = this.getActiveColony();
     if (active.sourceType === 'disk') {
       try {
-        const res = await fetch('/api/note/rename', {
+        const res = await fetch(`${API_BASE}/api/note/rename`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -620,7 +626,7 @@ class VaultClient {
     const active = this.getActiveColony();
     if (active.sourceType === 'disk') {
       try {
-        const res = await fetch('/api/note/delete', {
+        const res = await fetch(`${API_BASE}/api/note/delete`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ rel_path: relPath }),
@@ -650,7 +656,7 @@ class VaultClient {
     const active = this.getActiveColony();
     if (active.sourceType === 'disk') {
       try {
-        const res = await fetch('/api/note/verify-segment', {
+        const res = await fetch(`${API_BASE}/api/note/verify-segment`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -691,7 +697,7 @@ class VaultClient {
     const active = this.getActiveColony();
     if (active.sourceType === 'disk') {
       try {
-        const res = await fetch('/api/note/verify-all', {
+        const res = await fetch(`${API_BASE}/api/note/verify-all`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -732,7 +738,7 @@ class VaultClient {
     const active = this.getActiveColony();
     if (active.sourceType === 'disk') {
       try {
-        const res = await fetch('/api/note/link-term', {
+        const res = await fetch(`${API_BASE}/api/note/link-term`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -793,7 +799,7 @@ class VaultClient {
 
   public async researchWithAi(req: AiResearchRequest): Promise<AiResearchResponse> {
     try {
-      const res = await fetch('/api/ai/research', {
+      const res = await fetch(`${API_BASE}/api/ai/research`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(req),

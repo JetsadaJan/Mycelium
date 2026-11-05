@@ -56,6 +56,11 @@ struct UploadAssetPayload {
     base64_data: String,
 }
 
+#[derive(Deserialize)]
+struct OpenUrlPayload {
+    url: String,
+}
+
 fn decode_base64(input: &str) -> Result<Vec<u8>, String> {
     let clean: Vec<u8> = input
         .bytes()
@@ -288,6 +293,54 @@ pub fn run(args: Vec<String>) {
             continue;
         }
 
+        if *request.method() == Method::Post && url == "/api/fs/pick-folder" {
+            #[cfg(target_os = "macos")]
+            let picked_path = {
+                let script = r#"tell application "System Events" to activate
+POSIX path of (choose folder with prompt "Select Colony Directory:")"#;
+                match std::process::Command::new("osascript")
+                    .arg("-e")
+                    .arg(script)
+                    .output()
+                {
+                    Ok(output) if output.status.success() => {
+                        let path_str = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                        if path_str.is_empty() {
+                            None
+                        } else {
+                            Some(path_str.trim_end_matches('/').to_string())
+                        }
+                    }
+                    _ => None,
+                }
+            };
+
+            #[cfg(not(target_os = "macos"))]
+            let picked_path: Option<String> = None;
+
+            if let Some(path) = picked_path {
+                let name = std::path::Path::new(&path)
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .unwrap_or("Colony")
+                    .to_string();
+                let res = serde_json::json!({
+                    "path": path,
+                    "name": name,
+                    "cancelled": false
+                })
+                .to_string();
+                let _ = request.respond(json_response(200, res));
+            } else {
+                let res = serde_json::json!({
+                    "cancelled": true
+                })
+                .to_string();
+                let _ = request.respond(json_response(200, res));
+            }
+            continue;
+        }
+
         if *request.method() == Method::Get && url.starts_with("/api/asset?") {
             let query = url.trim_start_matches("/api/asset?");
             let mut target_rel = String::new();
@@ -401,6 +454,33 @@ pub fn run(args: Vec<String>) {
                             "filename": safe_name
                         })
                         .to_string())
+                    })
+            }
+            (&Method::Post, "/api/open-url") => {
+                serde_json::from_str::<OpenUrlPayload>(&body_str)
+                    .map_err(|e| e.to_string())
+                    .and_then(|p| {
+                        let trimmed = p.url.trim();
+                        if !(trimmed.starts_with("http://")
+                            || trimmed.starts_with("https://")
+                            || trimmed.starts_with("mailto:"))
+                        {
+                            return Err("Unsupported URL scheme".to_string());
+                        }
+                        #[cfg(target_os = "macos")]
+                        let status = std::process::Command::new("open")
+                            .arg(trimmed)
+                            .spawn();
+                        #[cfg(target_os = "linux")]
+                        let status = std::process::Command::new("xdg-open")
+                            .arg(trimmed)
+                            .spawn();
+                        #[cfg(target_os = "windows")]
+                        let status = std::process::Command::new("cmd")
+                            .args(["/C", "start", "", trimmed])
+                            .spawn();
+                        status.map_err(|e| e.to_string())?;
+                        Ok("{\"ok\":true}".to_string())
                     })
             }
             _ => Err(format!("Route not found: {}", url)),

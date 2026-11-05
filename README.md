@@ -58,6 +58,15 @@ AI content is marked at three levels, all stored as plain Markdown that Obsidian
 - Click **Verify** on a block or claim to strip the AI marker and promote it to verified text, or **Unmark AI** to remove a flag by mistake. Every verification is recorded in `.mycelium/index.json`.
 - AI content can come from a cloud LLM, a local model (Ollama), or an external coding agent following the generated `AGENTS.md` / `CLAUDE.md` protocol.
 
+### Agent Skill Protocol (`mycelium` skill)
+Mycelium includes an AI agent skill located at [`.agents/skills/mycelium/SKILL.md`](./.agents/skills/mycelium/SKILL.md) (and installable globally in `~/.gemini/config/skills/mycelium/` or `~/.claude/skills/`).
+
+When AI agents (Claude Code, Antigravity, or custom agent scripts) interact with your Colony, this skill enforces four principles:
+1. **Pre-flight discovery**: The agent scans existing `.md` files and aliases first so it reuses canonical titles instead of duplicating notes.
+2. **Lossless frontmatter preservation**: All existing custom YAML keys (`cssclasses`, `created`, `publish`, etc.) and folder locations are preserved.
+3. **Epistemic quarantine**: Newly synthesized sections are enclosed in `> [!ai]` callouts or `==[AI:agent] ...==` inline spans with `ai_status: partial` or `unverified`, allowing you to inspect and approve claims in the Mycelium UI.
+4. **Graph hyphae formation**: High-value concepts are linked with `[[WikiLinks]]`, and missing topics become dashed stub nodes ready for 1-click authoring.
+
 ### Colony Map
 - A force-directed graph inspired by Obsidian's graph physics, with global and local (1-3 hop) views.
 - Amber rings mark Nodes that still contain unverified AI content.
@@ -72,7 +81,7 @@ AI content is marked at three levels, all stored as plain Markdown that Obsidian
 
 ## Install (macOS)
 
-1. Download `Mycelium_0.0.1_aarch64.dmg` from the [Releases](https://github.com/JetsadaJan/Mycelium/releases) page (Apple Silicon Macs).
+1. Download `Mycelium_0.0.2_aarch64.dmg` from the [Releases](https://github.com/JetsadaJan/Mycelium/releases) page (Apple Silicon Macs).
 2. Open the DMG and drag **Mycelium** into **Applications**.
 3. The app is **not code-signed or notarized** yet, so macOS may block the first launch. Right-click the app and choose **Open**, or run:
    ```bash

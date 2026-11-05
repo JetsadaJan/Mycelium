@@ -13,3 +13,4 @@ Personal Wiki, Epistemic AI Verification Studio & Obsidian-Compatible Knowledge 
 - `src/components/WikiArticleView.tsx`: Wiki reader/editor, inline entity detection, hover preview, 1-click AI verification.
 - `src/components/ConnectionsInspector.tsx` & `AiResearchModal.tsx`: Backlinks, Outgoing Links, Unlinked Mentions & AI Researcher.
 - `sample-vault/`: Ready-to-use Obsidian & Mycelium compatible knowledge base with `AGENTS.md` and `CLAUDE.md`.
+- `.agents/skills/mycelium/SKILL.md`: Reusable AI skill for authoring, linking (`[[WikiLinks]]`), and tagging epistemic AI segments (`> [!ai]`, `==[AI:...]==`) in any Mycelium Colony.

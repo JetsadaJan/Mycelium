@@ -49,7 +49,7 @@ export const DEFAULT_VERIFICATION_COLORS = {
 };
 
 export const DEFAULT_DISPLAY_SETTINGS: ColonyDisplaySettings = {
-  baseNodeSize: 1.0,
+  baseNodeSize: 0.7,
   hubSizeBoost: 1.0,
   labelFontSize: 12,
   hyphaThickness: 1.1,
@@ -95,6 +95,11 @@ export function loadColonyColorSettings(colonyKey: string): ColonyColorSettings 
         display: {
           ...DEFAULT_DISPLAY_SETTINGS,
           ...(parsed.display || {}),
+          // If previous storage still had legacy default 1.0, adapt to new calibrated default 0.7
+          baseNodeSize:
+            parsed.display?.baseNodeSize !== undefined && parsed.display?.baseNodeSize !== 1.0
+              ? parsed.display.baseNodeSize
+              : DEFAULT_DISPLAY_SETTINGS.baseNodeSize,
         },
         forces: {
           ...DEFAULT_OBSIDIAN_FORCES,
@@ -265,6 +270,108 @@ export const NodeMapCanvas: React.FC<NodeMapCanvasProps> = ({
       return next;
     });
   };
+
+  // Card snapping & dragging positions (persisted per colony or default corners)
+  type CardCorner = 'bottom-left' | 'bottom-right' | 'top-left' | 'top-right';
+  const [readerCorner, setReaderCorner] = useState<CardCorner>('bottom-left');
+  const [controlsCorner, setControlsCorner] = useState<CardCorner>('bottom-right');
+  const [draggingCard, setDraggingCard] = useState<'reader' | 'controls' | null>(null);
+  const [cardDragPos, setCardDragPos] = useState<{ x: number; y: number } | null>(null);
+  const cardDragStartRef = useRef<{ startX: number; startY: number; initLeft: number; initTop: number } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const getCornerStyle = (corner: CardCorner, isControls: boolean) => {
+    const margin = 18;
+    switch (corner) {
+      case 'bottom-left':
+        return { bottom: margin, left: margin };
+      case 'bottom-right':
+        return { bottom: margin, right: margin };
+      case 'top-left':
+        return { top: 58, left: margin }; // below top-left pill bar
+      case 'top-right':
+        return { top: 58, right: margin };
+    }
+  };
+
+  const handleCardDragStart = (e: React.MouseEvent, type: 'reader' | 'controls') => {
+    // Only drag from non-interactive header regions
+    const target = e.target as HTMLElement;
+    if (target.closest('button, input, select, a, textarea')) return;
+
+    const el = e.currentTarget as HTMLElement;
+    const rect = el.getBoundingClientRect();
+    const parentRect = containerRef.current?.getBoundingClientRect() || { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+
+    cardDragStartRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      initLeft: rect.left - parentRect.left,
+      initTop: rect.top - parentRect.top,
+    };
+    setCardDragPos({
+      x: rect.left - parentRect.left,
+      y: rect.top - parentRect.top,
+    });
+    setDraggingCard(type);
+  };
+
+  useEffect(() => {
+    if (!draggingCard) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!cardDragStartRef.current || !containerRef.current) return;
+      const dx = e.clientX - cardDragStartRef.current.startX;
+      const dy = e.clientY - cardDragStartRef.current.startY;
+      const parentRect = containerRef.current.getBoundingClientRect();
+      const maxX = parentRect.width - 200;
+      const maxY = parentRect.height - 100;
+      const nextX = Math.max(10, Math.min(maxX, cardDragStartRef.current.initLeft + dx));
+      const nextY = Math.max(10, Math.min(maxY, cardDragStartRef.current.initTop + dy));
+      setCardDragPos({ x: nextX, y: nextY });
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      if (!cardDragStartRef.current || !containerRef.current) {
+        setDraggingCard(null);
+        setCardDragPos(null);
+        return;
+      }
+      const parentRect = containerRef.current.getBoundingClientRect();
+      const curX = cardDragPos ? cardDragPos.x : cardDragStartRef.current.initLeft;
+      const curY = cardDragPos ? cardDragPos.y : cardDragStartRef.current.initTop;
+
+      const isLeft = curX < parentRect.width / 2;
+      const isTop = curY < parentRect.height / 2;
+      const targetCorner: CardCorner = isTop
+        ? (isLeft ? 'top-left' : 'top-right')
+        : (isLeft ? 'bottom-left' : 'bottom-right');
+
+      if (draggingCard === 'reader') {
+        // Prevent overlapping with controls card: if same corner, flip controls or swap
+        if (targetCorner === controlsCorner) {
+          setControlsCorner(readerCorner);
+        }
+        setReaderCorner(targetCorner);
+      } else {
+        if (targetCorner === readerCorner) {
+          setReaderCorner(controlsCorner);
+        }
+        setControlsCorner(targetCorner);
+      }
+
+      setDraggingCard(null);
+      setCardDragPos(null);
+      cardDragStartRef.current = null;
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [draggingCard, cardDragPos, readerCorner, controlsCorner]);
 
   // Ordered clusters across the Colony + sequential auto-generated colors (with user overrides)
   const orderedClusters = useMemo(
@@ -1087,7 +1194,10 @@ export const NodeMapCanvas: React.FC<NodeMapCanvasProps> = ({
   }, [activeInspectNoteDoc]);
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+    <div
+      ref={containerRef}
+      style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}
+    >
       <canvas
         ref={canvasRef}
         onMouseDown={handleMouseDown}
@@ -1340,13 +1450,15 @@ export const NodeMapCanvas: React.FC<NodeMapCanvasProps> = ({
         </div>
       </div>
 
-      {/* Focused / Hovered Node Reader Card (Bottom-Left) — Readable Node Preview right on Colony Map */}
+      {/* Focused / Hovered Node Reader Card — Readable Node Preview right on Colony Map */}
       {activeInspectNodeObj && !compact && (
         <div
+          onMouseDown={(e) => handleCardDragStart(e, 'reader')}
           style={{
             position: 'absolute',
-            bottom: 18,
-            left: 18,
+            ...(draggingCard === 'reader' && cardDragPos
+              ? { left: cardDragPos.x, top: cardDragPos.y }
+              : getCornerStyle(readerCorner, false)),
             width: 356,
             maxWidth: 'calc(100vw - 380px)',
             background: 'var(--bg-glass)',
@@ -1354,11 +1466,15 @@ export const NodeMapCanvas: React.FC<NodeMapCanvasProps> = ({
             border: '1px solid var(--border-strong)',
             borderRadius: 18,
             padding: '13px 16px',
-            boxShadow: 'var(--shadow-card)',
+            boxShadow: draggingCard === 'reader' ? 'var(--shadow-elevated)' : 'var(--shadow-card)',
             pointerEvents: 'auto',
             display: 'flex',
             flexDirection: 'column',
             gap: 8,
+            cursor: draggingCard === 'reader' ? 'grabbing' : 'grab',
+            transition: draggingCard === 'reader' ? 'none' : 'all 0.35s cubic-bezier(0.2, 0.9, 0.3, 1)',
+            zIndex: draggingCard === 'reader' ? 40 : 32,
+            userSelect: draggingCard ? 'none' : 'auto',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -1531,10 +1647,12 @@ export const NodeMapCanvas: React.FC<NodeMapCanvasProps> = ({
       {/* Rounded Floating Dynamic Studio Controls Drawer (Saved per Colony) */}
       {showControls && !compact && (
         <div
+          onMouseDown={(e) => handleCardDragStart(e, 'controls')}
           style={{
             position: 'absolute',
-            bottom: 18,
-            right: 18,
+            ...(draggingCard === 'controls' && cardDragPos
+              ? { left: cardDragPos.x, top: cardDragPos.y }
+              : getCornerStyle(controlsCorner, true)),
             width: 332,
             maxHeight: 'calc(100% - 92px)',
             overflowY: 'auto',
@@ -1543,11 +1661,15 @@ export const NodeMapCanvas: React.FC<NodeMapCanvasProps> = ({
             border: '1px solid var(--border-subtle)',
             borderRadius: 18,
             padding: 15,
-            boxShadow: 'var(--shadow-card)',
+            boxShadow: draggingCard === 'controls' ? 'var(--shadow-elevated)' : 'var(--shadow-card)',
             fontSize: 12,
             display: 'flex',
             flexDirection: 'column',
             gap: 10,
+            cursor: draggingCard === 'controls' ? 'grabbing' : 'grab',
+            transition: draggingCard === 'controls' ? 'none' : 'all 0.35s cubic-bezier(0.2, 0.9, 0.3, 1)',
+            zIndex: draggingCard === 'controls' ? 40 : 32,
+            userSelect: draggingCard ? 'none' : 'auto',
           }}
         >
           {/* 3-Tab Switcher: Appearance | Colors | Physics */}
@@ -1634,11 +1756,11 @@ export const NodeMapCanvas: React.FC<NodeMapCanvasProps> = ({
               </div>
 
               <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>Base Node Size ({display.baseNodeSize.toFixed(2)}x)</span>
+                <span>Base Node Size ({(display.baseNodeSize / 0.7).toFixed(2)}x)</span>
                 <input
                   type="range"
-                  min={60}
-                  max={180}
+                  min={40}
+                  max={140}
                   value={Math.round(display.baseNodeSize * 100)}
                   onChange={(e) => {
                     const val = Number(e.target.value) / 100;

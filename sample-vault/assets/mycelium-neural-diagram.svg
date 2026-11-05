@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 320" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#11151c"/>
+      <stop offset="50%" stop-color="#151b26"/>
+      <stop offset="100%" stop-color="#111820"/>
+    </linearGradient>
+    <radialGradient id="emeraldGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="amberGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="indigoGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#818cf8" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#818cf8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="860" height="320" rx="18" fill="url(#bgGrad)" stroke="#283244" stroke-width="1.5"/>
+
+  <!-- Panel 1: Biological Mycelium (Fungi & Hyphae) -->
+  <g transform="translate(20, 20)">
+    <rect width="255" height="280" rx="14" fill="#161d29" stroke="#243142" stroke-width="1"/>
+    <circle cx="127" cy="135" r="85" fill="url(#emeraldGlow)"/>
+    <text x="127" y="32" text-anchor="middle" fill="#10b981" font-family="system-ui, sans-serif" font-size="11" font-weight="700" letter-spacing="1.2">1. BIOLOGICAL MYCELIUM</text>
+    <text x="127" y="50" text-anchor="middle" fill="#94a3b8" font-family="Georgia, serif" font-size="14">Fungal Hyphae &amp; Spores</text>
+
+    <!-- Hyphal branching filaments -->
+    <g stroke="#10b981" stroke-opacity="0.65" stroke-width="2" fill="none" stroke-linecap="round">
+      <path d="M 55 210 Q 95 170 127 140"/>
+      <path d="M 127 140 Q 165 110 205 90"/>
+      <path d="M 127 140 Q 170 165 210 195"/>
+      <path d="M 127 140 Q 85 115 50 95"/>
+      <path d="M 92 175 Q 115 205 145 225"/>
+      <path d="M 165 115 Q 145 85 125 75"/>
+    </g>
+
+    <!-- Nodes -->
+    <circle cx="127" cy="140" r="9" fill="#10b981" stroke="#ecfdf5" stroke-width="2"/>
+    <circle cx="55" cy="210" r="6" fill="#059669"/>
+    <circle cx="205" cy="90" r="6.5" fill="#10b981"/>
+    <circle cx="210" cy="195" r="6" fill="#059669"/>
+    <circle cx="50" cy="95" r="5.5" fill="#10b981"/>
+    <circle cx="145" cy="225" r="5" fill="#34d399"/>
+    <circle cx="125" cy="75" r="5" fill="#34d399"/>
+
+    <text x="127" y="256" text-anchor="middle" fill="#cbd5e1" font-family="monospace" font-size="11">Nutrient &amp; Action-Potential Graph</text>
+  </g>
+
+  <!-- Panel 2: Biological & Artificial Neural Network -->
+  <g transform="translate(302, 20)">
+    <rect width="255" height="280" rx="14" fill="#161d29" stroke="#243142" stroke-width="1"/>
+    <circle cx="127" cy="135" r="85" fill="url(#amberGlow)"/>
+    <text x="127" y="32" text-anchor="middle" fill="#f59e0b" font-family="system-ui, sans-serif" font-size="11" font-weight="700" letter-spacing="1.2">2. NEURAL CONNECTOME</text>
+    <text x="127" y="50" text-anchor="middle" fill="#94a3b8" font-family="Georgia, serif" font-size="14">Brain Synapses &amp; AI Layers</text>
+
+    <!-- Layered Neural Edges -->
+    <g stroke="#f59e0b" stroke-opacity="0.45" stroke-width="1.6">
+      <line x1="55" y1="95" x2="127" y2="110"/>
+      <line x1="55" y1="95" x2="127" y2="165"/>
+      <line x1="55" y1="145" x2="127" y2="110"/>
+      <line x1="55" y1="145" x2="127" y2="165"/>
+      <line x1="55" y1="195" x2="127" y2="110"/>
+      <line x1="55" y1="195" x2="127" y2="165"/>
+      <line x1="127" y1="110" x2="200" y2="120"/>
+      <line x1="127" y1="110" x2="200" y2="170"/>
+      <line x1="127" y1="165" x2="200" y2="120"/>
+      <line x1="127" y1="165" x2="200" y2="170"/>
+    </g>
+
+    <circle cx="55" cy="95" r="6" fill="#fbbf24"/>
+    <circle cx="55" cy="145" r="6" fill="#f59e0b"/>
+    <circle cx="55" cy="195" r="6" fill="#fbbf24"/>
+    <circle cx="127" cy="110" r="8" fill="#f59e0b" stroke="#fef3c7" stroke-width="2"/>
+    <circle cx="127" cy="165" r="8" fill="#f59e0b" stroke="#fef3c7" stroke-width="2"/>
+    <circle cx="200" cy="120" r="7" fill="#fbbf24"/>
+    <circle cx="200" cy="170" r="7" fill="#fbbf24"/>
+
+    <text x="127" y="256" text-anchor="middle" fill="#cbd5e1" font-family="monospace" font-size="11">Weighted Synaptic Propagation</text>
+  </g>
+
+  <!-- Panel 3: Mycelium Knowledge Colony -->
+  <g transform="translate(585, 20)">
+    <rect width="255" height="280" rx="14" fill="#161d29" stroke="#243142" stroke-width="1"/>
+    <circle cx="127" cy="135" r="85" fill="url(#indigoGlow)"/>
+    <text x="127" y="32" text-anchor="middle" fill="#818cf8" font-family="system-ui, sans-serif" font-size="11" font-weight="700" letter-spacing="1.2">3. MYCELIUM COLONY</text>
+    <text x="127" y="50" text-anchor="middle" fill="#94a3b8" font-family="Georgia, serif" font-size="14">Nodes, [[Hyphae]] &amp; #Clusters</text>
+
+    <g stroke="#818cf8" stroke-opacity="0.6" stroke-width="1.8">
+      <line x1="127" y1="138" x2="65" y2="95"/>
+      <line x1="127" y1="138" x2="195" y2="95"/>
+      <line x1="127" y1="138" x2="70" y2="195"/>
+      <line x1="127" y1="138" x2="190" y2="195"/>
+      <line x1="65" y1="95" x2="195" y2="95" stroke-dasharray="4 4"/>
+    </g>
+
+    <circle cx="127" cy="138" r="10" fill="#10b981" stroke="#ffffff" stroke-width="2.2"/>
+    <circle cx="65" cy="95" r="7" fill="#10b981"/>
+    <circle cx="195" cy="95" r="7" fill="#f59e0b"/>
+    <circle cx="70" cy="195" r="7" fill="#818cf8"/>
+    <circle cx="190" cy="195" r="7" fill="#10b981"/>
+
+    <text x="127" y="256" text-anchor="middle" fill="#cbd5e1" font-family="monospace" font-size="11">Verified Emerald + AI Amber Review</text>
+  </g>
+</svg>

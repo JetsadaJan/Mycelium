@@ -1,0 +1,90 @@
+# MYCELIUM SOURCE-AVAILABLE LICENSE
+Version 1.0 — Hybrid Non-Commercial & Self-Executing Commercial Royalty License
+
+Copyright (c) 2026 Jetsada Janpaijet. All Rights Reserved.
+
+---
+
+## IMPORTANT NOTICE TO ALL USERS
+
+This software ("the Software") is **Source-Available**, NOT Open Source (as defined by the Open Source Initiative).
+
+1. **Free Non-Commercial & Personal Use**: If you are a solo individual, student, or academic researcher using and modifying the Software strictly for personal, educational, or non-commercial purposes, you may use, modify, and self-host the Software **free of charge** under **Part I (Non-Commercial Grant)** below.
+2. **Commercial Use Requires Prior Agreement or Triggers Automatic Royalties**: Any Commercial Use (including selling the Software, offering it as a hosted/managed SaaS service, embedding it in a commercial product, or deploying it within any for-profit company, organization, or team of two or more individuals) **requires a separate written Commercial License from the Licensor BEFORE deployment**.
+3. **Self-Executing Commercial Royalty Fallback**: If you or your organization engage in any Commercial Use of the Software without first executing a custom Commercial License Agreement with the Licensor, your Commercial Use constitutes irrevocable acceptance of **Part II (Default Commercial Royalty Terms)**, obligating you to pay **twenty-five percent (25%) of Gross Revenue or $2,500 USD per calendar month (whichever is greater)** to the Licensor. To obtain standard commercial pricing, contact the Licensor before commercial use.
+
+---
+
+## DEFINITIONS
+
+- **"Licensor"** means **Jetsada Janpaijet**, the copyright holder and original creator of the Software.
+- **"Software"** means the Mycelium source code, binaries, documentation, configuration files, and any Derivative Works or modifications made available in this repository.
+- **"Derivative Work"** means any modification, fork, translation, adaptation, plugin, integration, or work based upon or incorporating any portion of the Software.
+- **"Personal Non-Commercial Use"** means use of the Software by a single natural person ("Solo Individual") for personal knowledge management, private study, academic research, or unpaid educational evaluation, excluding any distribution for a fee, hosted service offering, or internal business operations of a for-profit legal entity.
+- **"Commercial Use"** means any use of the Software or a Derivative Work that is not Personal Non-Commercial Use, including without limitation:
+  (a) selling, leasing, sublicensing, or distributing the Software or any Derivative Work for direct or indirect compensation;
+  (b) providing the Software or any Derivative Work as a hosted service, Software-as-a-Service (SaaS), managed platform, or API to third parties;
+  (c) bundling, embedding, or integrating the Software into any commercial product, consulting deliverable, or paid course/service; or
+  (d) internal deployment, evaluation beyond 14 days, or operational use by or on behalf of any for-profit corporation, partnership, startup, enterprise, or commercial team consisting of two (2) or more individuals.
+- **"Gross Revenue"** means the total gross amounts invoiced, received, or accrued (before any deduction for taxes, hosting costs, salaries, marketing, refunds, or operating expenses) by a Commercial User and its affiliates from:
+  (a) any product, service, subscription, or consulting engagement that incorporates, relies upon, or is facilitated by the Software or any Derivative Work; or
+  (b) where the Software is used internally by a commercial entity without direct per-unit resale, the gross revenue of the business unit or product line utilizing the Software.
+
+---
+
+## PART I — FREE NON-COMMERCIAL LICENSE GRANT (POLYFORM NONCOMMERCIAL BASELINE)
+
+Subject to your continuous compliance with all terms of this License, the Licensor hereby grants you a worldwide, royalty-free, non-exclusive, revocable license to:
+
+1. **Access and Use**: Download, install, compile, and run the Software solely for **Personal Non-Commercial Use**.
+2. **Modify and Fork**: Create Derivative Works and personal forks of the Software for **Personal Non-Commercial Use**.
+3. **Share Non-Commercially**: Distribute unmodified copies or Derivative Works on public source-control platforms (such as GitHub) solely for non-commercial community sharing, provided that:
+   (a) every copy or Derivative Work retains this `LICENSE` file and all copyright notices intact at the root of the repository;
+   (b) you clearly state any modifications made by you; and
+   (c) you do not charge any fee, subscription, sponsorship gate, or commercial consideration for access to the Software or Derivative Work.
+
+### Restrictions Under Part I
+Under Part I, you may **NOT**:
+- Use the Software or any Derivative Work for any **Commercial Use**;
+- Remove, obscure, or alter any copyright, attribution, or license notices in the Software; or
+- Re-license the Software or any Derivative Work under any Open Source license (including MIT, Apache-2.0, GPL, AGPL, or BSD) without prior written permission from the Licensor.
+
+---
+
+## PART II — SELF-EXECUTING DEFAULT COMMERCIAL ROYALTY TERMS
+
+### 1. Mandatory Prior Negotiation Policy
+The Licensor offers tailored, reasonable commercial licensing (such as flat annual seat licenses or negotiated revenue shares) to startups, enterprises, and commercial developers who contact the Licensor **prior to** commencing Commercial Use.
+
+### 2. Automatic Royalty Trigger for Unnegotiated Commercial Use
+If you or your legal entity ("Commercial User") commence any **Commercial Use** of the Software or any Derivative Work **without** a signed, active custom Commercial License Agreement with the Licensor, then by the act of such Commercial Use you automatically and irrevocably agree to be bound by the following self-executing commercial terms:
+
+1. **Royalty Rate & Minimum Monthly Floor**: Commercial User shall pay to the Licensor a ongoing royalty equal to the **greater of**:
+   - **Twenty-Five Percent (25%) of Gross Revenue** generated during each calendar month in which the Software or any Derivative Work is used, hosted, or distributed; **OR**
+   - **Two Thousand Five Hundred United States Dollars ($2,500.00 USD) per calendar month** (the "Minimum Commercial Floor"), prorated for partial months only if usage ceases permanently within 15 days.
+2. **Reporting & Payment Schedule**: Within fifteen (15) days following the end of each calendar quarter, Commercial User shall deliver to the Licensor a certified written statement detailing Gross Revenue, active user/seat counts, and deployment scope, accompanied by full payment in USD via wire transfer or the Licensor's designated payment processor.
+3. **Late Payment Interest**: Any overdue royalty payment shall accrue interest at the rate of **1.5% per month (18% per annum)** or the maximum rate permitted by applicable law, whichever is lower.
+4. **Independent Audit Rights**: Licensor (or an independent certified public accountant designated by Licensor) shall have the right, upon ten (10) days' written notice, to audit Commercial User's financial records, billing systems, and deployment logs to verify compliance. If an audit reveals an underpayment of five percent (5%) or more, or if Commercial User failed to report Commercial Use, Commercial User shall immediately pay the shortfall plus a **20% compliance surcharge** and reimburse 100% of Licensor's audit and legal costs.
+5. **No Waiver of Injunctive Relief**: Payment or accrual of royalties under this Part II does not limit Licensor's right to terminate Commercial User's license for non-reporting or to seek immediate injunctive relief halting unauthorized distribution.
+
+---
+
+## PART III — CONTRIBUTOR LICENSE AGREEMENT (INBOUND CONTRIBUTIONS)
+
+By submitting any patch, pull request, issue, code snippet, documentation, or other contribution ("Contribution") to this repository or to the Licensor, you hereby grant to **Jetsada Janpaijet** a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright and patent license to use, reproduce, modify, prepare Derivative Works of, publicly display, sublicense, and distribute your Contribution under **both** this Source-Available License and any separate **Commercial License** granted by the Licensor to third parties.
+
+---
+
+## PART IV — DISCLAIMER OF WARRANTY & LIMITATION OF LIABILITY
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE LICENSOR OR COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+---
+
+## PART V — INTERNATIONAL GOVERNING LAW, ARBITRATION & ENFORCEMENT
+
+1. **Governing Law**: This License and any dispute, claim, or royalty obligation arising out of or relating to the Software shall be governed by and construed in accordance with the **laws of the Republic of Singapore**, without regard to its conflict of law principles, alongside applicable international copyright treaties (including the **Berne Convention** and the **WIPO Copyright Treaty**).
+2. **International Arbitration (New York Convention Enforcement)**: Any dispute, controversy, or claim arising out of or relating to this License, including its breach, termination, or validity, shall be finally resolved by arbitration administered by the **Singapore International Arbitration Centre ("SIAC")** in accordance with the Arbitration Rules of the Singapore International Arbitration Centre for the time being in force. The seat of arbitration shall be Singapore, the tribunal shall consist of one (1) arbitrator, and the language of the arbitration shall be English. The resulting arbitral award shall be final, binding, and enforceable in any court of competent jurisdiction worldwide pursuant to the **1958 United Nations Convention on the Recognition and Enforcement of Foreign Arbitral Awards (the "New York Convention")**.
+3. **Preservation of Local Injunctive Relief**: Notwithstanding the foregoing arbitration clause, the Licensor retains the absolute right to apply to any court of competent jurisdiction in any country where the Commercial User resides, operates, or distributes the Software for immediate injunctive, equitable, or provisional relief to stop unauthorized infringement or collect undisputed royalty obligations.
+4. **Attorneys' Fees**: In any arbitration or judicial proceeding to enforce this License or collect royalties under Part II, the prevailing Licensor shall be entitled to recover all reasonable attorneys' fees, expert witness fees, and collection costs from the infringing or non-paying party.
+5. **Severability**: If any provision of this License is held to be unenforceable or invalid, such provision shall be reformed only to the extent necessary to make it enforceable to the maximum extent permissible, and the remaining provisions shall remain in full force and effect.

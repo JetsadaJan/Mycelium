@@ -1,0 +1,33 @@
+{
+  "name": "mycelium",
+  "private": false,
+  "version": "0.0.1",
+  "description": "Mycelium — Personal Wiki, AI Verification Studio & Obsidian-Compatible Knowledge Graph",
+  "author": "Jetsada Janpaijet",
+  "license": "SEE LICENSE IN LICENSE",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "rust:server": "cargo run --manifest-path src-tauri/Cargo.toml -- --server",
+    "tauri": "tauri",
+    "rust:test": "cargo test --manifest-path src-tauri/Cargo.toml"
+  },
+  "dependencies": {
+    "lucide-react": "^0.475.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.4",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "~5.7.2",
+    "vite": "^6.0.5",
+    "vitest": "^2.1.8"
+  }
+}

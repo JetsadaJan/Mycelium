@@ -1,0 +1,19 @@
+node_modules/
+dist/
+src-tauri/target/
+.DS_Store
+*.log
+.env
+.env.*
+
+# Internal agent / session files
+.agents/
+STATE.md
+.geminiignore
+.antigravityignore
+tsconfig.tsbuildinfo
+
+# Generated vault index (rebuilt on scan)
+.mycelium/
+sample-vault/.obsidian/
+src-tauri/gen/

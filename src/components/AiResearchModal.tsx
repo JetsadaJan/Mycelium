@@ -20,7 +20,7 @@ export const AiResearchModal: React.FC<AiResearchModalProps> = ({
   onAppendBlockToCurrent,
 }) => {
   const [topic, setTopic] = useState(initialTopic);
-  const [mode, setMode] = useState<'agent_wiki' | 'api' | 'ollama'>('agent_wiki');
+  const [mode, setMode] = useState<'agent_research' | 'agent_wiki' | 'api' | 'ollama'>('agent_research');
   const [apiUrl, setApiUrl] = useState('https://api.openai.com/v1/chat/completions');
   const [apiKey, setApiKey] = useState('');
   const [model, setModel] = useState('gpt-4o-mini');
@@ -111,16 +111,16 @@ export const AiResearchModal: React.FC<AiResearchModalProps> = ({
           <button
             type="button"
             className="btn-subtle"
-            onClick={() => setMode('agent_wiki')}
+            onClick={() => setMode('agent_research')}
             style={{
               padding: '10px 12px',
               justifyContent: 'flex-start',
-              borderColor: mode === 'agent_wiki' ? 'var(--ai-amber)' : undefined,
+              borderColor: mode === 'agent_research' || mode === 'agent_wiki' ? 'var(--ai-amber)' : undefined,
             }}
           >
             <Bot size={15} color="var(--ai-amber)" />
             <div style={{ textAlign: 'left' }}>
-              <div style={{ fontWeight: 600, fontSize: 12.5 }}>Grounded Wiki + Agent</div>
+              <div style={{ fontWeight: 600, fontSize: 12.5 }}>Grounded Research + Agent</div>
               <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>
                 Wikipedia + Antigravity / Claude
               </div>
@@ -141,7 +141,7 @@ export const AiResearchModal: React.FC<AiResearchModalProps> = ({
               borderColor: mode === 'api' ? 'var(--ai-amber)' : undefined,
             }}
           >
-            <Globe size={15} color="var(--wiki-link)" />
+            <Globe size={15} color="var(--hypha-link)" />
             <div style={{ textAlign: 'left' }}>
               <div style={{ fontWeight: 600, fontSize: 12.5 }}>Cloud LLM API</div>
               <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>
@@ -180,7 +180,7 @@ export const AiResearchModal: React.FC<AiResearchModalProps> = ({
               type="text"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              placeholder="Enter concept or Wiki page title (e.g. Spore, Slime Mold, Rhizosphere)..."
+              placeholder="Enter concept or Node title (e.g. Spore, Slime Mold, Rhizosphere)..."
               style={{
                 flex: 1,
                 padding: '9px 12px',
@@ -195,7 +195,7 @@ export const AiResearchModal: React.FC<AiResearchModalProps> = ({
             </button>
           </div>
 
-          {mode !== 'agent_wiki' && (
+          {mode !== 'agent_research' && mode !== 'agent_wiki' && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               <input
                 type="text"

@@ -4,7 +4,7 @@ use crate::models::{
 };
 use crate::parser::{
     find_unlinked_position, link_term_in_markdown, normalize_id, parse_frontmatter, parse_note,
-    strip_obsidian_comments, verify_entire_markdown, verify_segment_in_markdown,
+    strip_delimited_comments, verify_entire_markdown, verify_segment_in_markdown,
 };
 use std::collections::{HashMap, HashSet};
 use std::fs;
@@ -94,7 +94,7 @@ impl VaultEngine {
 
         let css_path = obsidian_snippets.join("mycelium-epistemic.css");
         if !css_path.exists() {
-            let css = r#"/* Mycelium Epistemic AI Styling for Obsidian Compatibility */
+            let css = r#"/* Mycelium Epistemic AI Interoperability CSS Snippet */
 .callout[data-callout="ai"],
 .callout[data-callout="ai-draft"],
 .callout[data-callout="ai-unverified"] {
@@ -269,7 +269,7 @@ impl VaultEngine {
                 }
 
                 let (_, _, _, _, body_slice) = parse_frontmatter(&source_note.raw_markdown);
-                let comment_free_body = strip_obsidian_comments(body_slice);
+                let comment_free_body = strip_delimited_comments(body_slice);
                 for (line_idx, line) in comment_free_body.lines().enumerate() {
                     let trimmed = line.trim();
                     if trimmed.is_empty() || trimmed.starts_with('#') {

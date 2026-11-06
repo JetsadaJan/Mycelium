@@ -1,7 +1,7 @@
 [package]
 name = "mycelium-core"
-version = "0.0.2"
-description = "Mycelium — Obsidian-Compatible Personal Wiki & Epistemic AI Verification Engine"
+version = "0.0.3"
+description = "Mycelium — Knowledge Colony & Epistemic AI Verification Engine"
 authors = ["Jetsada Janpaijet"]
 license-file = "../LICENSE"
 edition = "2021"

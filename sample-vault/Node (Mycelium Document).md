@@ -1,6 +1,6 @@
 ---
 title: Node (Mycelium Document)
-aliases: [Node, Colony Node, Wiki Node]
+aliases: [Node, Colony Node, Document Node]
 tags: [mycelium-system, architecture, core]
 ai_status: verified
 verified_at: 2026-11-05

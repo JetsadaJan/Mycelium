@@ -21,7 +21,7 @@ pub struct AiSegment {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct WikiLinkRef {
+pub struct HyphaLinkRef {
     pub target: String,
     pub target_slug: String,
     pub display_text: String,
@@ -31,6 +31,9 @@ pub struct WikiLinkRef {
     pub context: String,
     pub raw: String,
 }
+
+/// Backward compatibility alias
+pub type WikiLinkRef = HyphaLinkRef;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct BacklinkRef {
@@ -76,7 +79,7 @@ pub struct NoteDocument {
     pub verified_at: Option<String>,
     pub sources: Vec<String>,
     pub ai_segments: Vec<AiSegment>,
-    pub outgoing_links: Vec<WikiLinkRef>,
+    pub outgoing_links: Vec<HyphaLinkRef>,
     pub headings: Vec<HeadingRef>,
     pub word_count: usize,
     pub updated_at: String,

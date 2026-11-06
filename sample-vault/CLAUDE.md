@@ -1,6 +1,6 @@
-# Mycelium & Obsidian Vault — AI Agent Protocol (Antigravity / Claude Code)
+# Mycelium Colony — AI Agent Protocol (Antigravity / Claude Code)
 
-When creating or updating `.md` files in this Wiki Vault, ALWAYS follow these rules so both **Mycelium** and **Obsidian** render epistemic AI status accurately:
+When creating or updating `.md` files in this Mycelium Colony, ALWAYS follow these rules so Mycelium and standard Markdown environments render epistemic AI status accurately:
 
 1. **YAML Frontmatter**:
    ```yaml
@@ -13,11 +13,11 @@ When creating or updating `.md` files in this Wiki Vault, ALWAYS follow these ru
    sources: [https://en.wikipedia.org/wiki/...]
    ---
    ```
-2. **Block-Level AI Content**: Wrap AI-researched paragraphs in an Obsidian Callout:
+2. **Block-Level AI Content**: Wrap AI-researched paragraphs in a Callout:
    ```markdown
    > [!ai] AI Research (Unverified)
-   > Detailed synthesis with [[WikiLinks]] to related concepts.
+   > Detailed synthesis with [[Hyphae Links]] to related concepts.
    ```
 3. **Inline AI Claims / Facts**: Wrap specific AI-generated numbers or claims with:
    `==[AI] specific claim or statistic==`
-4. **Wiki Linking**: Use standard Obsidian `[[Page Title]]` or `[[Page Title|Display Text]]`.
+4. **Hyphae Linking**: Use standard bidirectional `[[Page Title]]` or `[[Page Title|Display Text]]`.

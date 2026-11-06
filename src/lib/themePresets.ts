@@ -263,6 +263,8 @@ export function applyThemePaletteToDocument(colors: ThemeColorTokens): 'dark' | 
     hexAlpha(colors.textPrimary, dark ? 0.17 : 0.19)
   );
 
+  root.style.setProperty('--hypha-link', colors.accent);
+  root.style.setProperty('--hypha-link-bg', hexAlpha(colors.accent, dark ? 0.14 : 0.12));
   root.style.setProperty('--wiki-link', colors.accent);
   root.style.setProperty('--wiki-link-bg', hexAlpha(colors.accent, dark ? 0.14 : 0.12));
 

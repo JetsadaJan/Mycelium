@@ -11,7 +11,7 @@ sources:
 
 # Colony (Mycelium Workspace)
 
-Welcome to **Mycelium**—a personal knowledge studio inspired by the biological [[Mycelium Network]] of [[Fungi]] and the associative structure of a [[Biological Neural Network]]. Every folder of Markdown (`.md`) files you open is called a **Colony** and remains 100% **Obsidian Compat** and Git-ready.
+Welcome to **Mycelium**—a personal knowledge studio inspired by the biological [[Mycelium Network]] of [[Fungi]] and the associative structure of a [[Biological Neural Network]]. Every folder of Markdown (`.md`) files you open is called a **Colony** and remains 100% open, portable, and Git-ready.
 
 ## The Four Core Concepts of Mycelium
 

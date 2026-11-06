@@ -129,12 +129,12 @@ export const ConnectionsInspector: React.FC<ConnectionsInspectorProps> = ({
         />
       </div>
 
-      {/* 0. Document Outline (Obsidian Table of Contents) */}
+      {/* 0. Document Outline (Table of Contents) */}
       {outlineHeadings.length > 0 && (
         <>
           <div className="sidebar-section-header">
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-              <ListTree size={13} color="var(--wiki-link)" /> Outline ({outlineHeadings.length})
+              <ListTree size={13} color="var(--hypha-link)" /> Outline ({outlineHeadings.length})
             </span>
           </div>
           <div
@@ -227,7 +227,7 @@ export const ConnectionsInspector: React.FC<ConnectionsInspectorProps> = ({
                   marginBottom: 4,
                 }}
               >
-                <span style={{ fontWeight: 600, fontSize: 12.5, color: 'var(--wiki-link)' }}>
+                <span style={{ fontWeight: 600, fontSize: 12.5, color: 'var(--hypha-link)' }}>
                   {stripMarkdownToPlainText(bl.source_title)}
                 </span>
                 <span
@@ -266,7 +266,7 @@ export const ConnectionsInspector: React.FC<ConnectionsInspectorProps> = ({
           <>
             <div className="sidebar-section-header">
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                <ArrowUpRight size={13} color="var(--wiki-link)" /> Outgoing Hyphae (
+                <ArrowUpRight size={13} color="var(--hypha-link)" /> Outgoing Hyphae (
                 {outgoingNodeLinks.length})
               </span>
             </div>
@@ -316,7 +316,7 @@ export const ConnectionsInspector: React.FC<ConnectionsInspectorProps> = ({
                             gap: 7,
                             fontSize: 12.5,
                             fontWeight: 500,
-                            color: resolved ? 'var(--text-primary)' : 'var(--wiki-stub)',
+                            color: resolved ? 'var(--text-primary)' : 'var(--hypha-stub)',
                             padding: 0,
                             textAlign: 'left',
                           }}
@@ -329,7 +329,7 @@ export const ConnectionsInspector: React.FC<ConnectionsInspectorProps> = ({
                               !resolved
                                 ? {
                                     background: 'transparent',
-                                    border: '1.5px dashed var(--wiki-stub)',
+                                    border: '1.5px dashed var(--hypha-stub)',
                                     boxShadow: 'none',
                                   }
                                 : undefined

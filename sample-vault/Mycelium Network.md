@@ -22,7 +22,7 @@ The decentralized architecture of a mycelium inspires both neuroscience analogie
 
 - **Biological Substrate**: Underground [[Hypha (Biology)|Hyphae]] fuse and branch to route carbon, nitrogen, and electrical impulses across the forest, functioning remarkably like a [[Biological Neural Network]].
 - **Computational Graph**: Each intersection or fruiting site acts as a [[Node (Graph & Neural)|Graph Node]], analogous to units in an [[Artificial Neural Network]].
-- **Mycelium Software Architecture**: In this application, your entire vault is called a [[Colony (Mycelium Workspace)|Colony]], each Markdown article is a [[Node (Mycelium Document)|Node]], and every directional WikiLink is a [[Hypha (Mycelium Engine)|Hypha]].
+- **Mycelium Software Architecture**: In this application, your entire workspace is called a [[Colony (Mycelium Workspace)|Colony]], each Markdown article is a [[Node (Mycelium Document)|Node]], and every directional connection is a [[Hypha (Mycelium Engine)|Hypha]].
 
 ```mermaid
 graph LR

@@ -1,13 +1,13 @@
 ---
 title: Hypha (Mycelium Engine)
-aliases: [Hypha, Hyphae, WikiLink, Knowledge Link]
+aliases: [Hypha, Hyphae, Hyphal Link, Knowledge Link]
 tags: [mycelium-system, architecture, core]
 ai_status: verified
 verified_at: 2026-11-05
 scope: "Directional [[Link]] connecting Nodes in the Mycelium app"
 disambiguation: "Hypha (Biology)"
 sources:
-  - "https://obsidian.md/help/Linking+notes+and+files/Internal+links"
+  - "https://en.wikipedia.org/wiki/Hyperlink"
 ---
 
 # Hypha (Mycelium Engine)

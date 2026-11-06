@@ -7,6 +7,7 @@ import {
   GraphEdge,
   GraphNode,
   HeadingRef,
+  HyphaLinkRef,
   NoteDocument,
   UnlinkedMention,
   VaultSnapshot,
@@ -62,20 +63,23 @@ export function stripAccidentalAiWrapper(val: string): string {
 }
 
 /**
- * Strips Obsidian comments `%% ... %%` (both inline and multi-line) for Read mode
+ * Strips delimited comments `%% ... %%` (both inline and multi-line) for Read mode
  * and parser extraction, without altering the underlying `.md` source in Write mode.
  */
-export function stripObsidianComments(markdown: string): string {
+export function stripDelimitedComments(markdown: string): string {
   if (!markdown || !markdown.includes('%%')) return markdown;
   return markdown.replace(/%%[\s\S]*?%%/g, '');
 }
 
+/** Backward compatibility alias */
+export const stripObsidianComments = stripDelimitedComments;
+
 /**
  * Extracts a specific section (`#Heading`) or block (`^block-id`) from a Markdown body
- * for Obsidian-compatible transclusion (`![[Note#Heading]]` and `![[Note#^block-id]]`).
+ * for transclusion (`![[Note#Heading]]` and `![[Note#^block-id]]`).
  */
 export function extractNoteSectionOrBlock(markdownBody: string, anchor?: string): string {
-  const cleanBody = stripObsidianComments(markdownBody);
+  const cleanBody = stripDelimitedComments(markdownBody);
   if (!anchor || !anchor.trim()) return cleanBody;
   const trimmedAnchor = anchor.trim();
 
@@ -472,13 +476,12 @@ export function parseAiSegments(body: string): AiSegment[] {
 }
 
 /**
- * Normalizes accidental formatting inside `[[...]]` (which is invalid in Obsidian because `*`
- * cannot be in a filename) into 100% Obsidian-compatible outer formatting:
+ * Normalizes accidental formatting inside `[[...]]` into clean outer formatting:
  * - `[[**Target**]]` -> `**[[Target]]**`
  * - `[[*Target*]]` -> `*[[Target]]*`
  * - `[[Target|**Alias**]]` -> `**[[Target|Alias]]**`
  */
-export function normalizeObsidianFormattedLinks(markdown: string): string {
+export function normalizeFormattedLinks(markdown: string): string {
   return markdown.replace(/(!?)\[\[([^\[\]\n]+)\]\]/g, (full, bang: string, inner: string) => {
     if (bang === '!') return full;
     const trimmed = inner.trim();
@@ -510,9 +513,12 @@ export function normalizeObsidianFormattedLinks(markdown: string): string {
   });
 }
 
-export function parseWikiLinks(body: string): WikiLinkRef[] {
-  const links: WikiLinkRef[] = [];
-  const cleanBody = stripObsidianComments(body);
+/** Backward compatibility alias */
+export const normalizeObsidianFormattedLinks = normalizeFormattedLinks;
+
+export function parseHyphaLinks(body: string): HyphaLinkRef[] {
+  const links: HyphaLinkRef[] = [];
+  const cleanBody = stripDelimitedComments(body);
   const lines = cleanBody.split(/\r?\n/);
   const linkRe = /(!?)\[\[([^\[\]]+)\]\]/g;
 
@@ -549,9 +555,12 @@ export function parseWikiLinks(body: string): WikiLinkRef[] {
   return links;
 }
 
+/** Backward compatibility alias */
+export const parseWikiLinks = parseHyphaLinks;
+
 export function parseHeadings(body: string): HeadingRef[] {
   const out: HeadingRef[] = [];
-  stripObsidianComments(body)
+  stripDelimitedComments(body)
     .split(/\r?\n/)
     .forEach((line, idx) => {
       const m = line.trimStart().match(/^(#{1,6})\s+(.+)$/);
@@ -576,7 +585,7 @@ export function parseNote(relPath: string, rawMarkdown: string, updatedAt = '202
   const title = frontmatter.title || fileStem;
   const id = normalizeId(fileStem);
 
-  const commentFreeBody = stripObsidianComments(body);
+  const commentFreeBody = stripDelimitedComments(body);
   const inlineTagRe = /(?:^|\s)#([a-zA-Z0-9_\-\u0E00-\u0E7F/]+)/g;
   for (const line of commentFreeBody.split(/\r?\n/)) {
     if (/^#{1,6}\s/.test(line.trim())) continue;
@@ -588,7 +597,7 @@ export function parseNote(relPath: string, rawMarkdown: string, updatedAt = '202
   }
 
   const ai_segments = parseAiSegments(body);
-  const outgoing_links = parseWikiLinks(body);
+  const outgoing_links = parseHyphaLinks(body);
   const headings = parseHeadings(body);
 
   const fmStatus = (frontmatter.ai_status || frontmatter.status || '').toLowerCase();
@@ -850,7 +859,7 @@ export function markSelectionAsAiSafely(
         ) {
           continue;
         }
-        const plainLine = stripMarkdownToPlainText(stripObsidianComments(line));
+        const plainLine = stripMarkdownToPlainText(stripDelimitedComments(line));
         if (plainLine.includes(selFragment) && !/^[-*]\s+\[[ xX]\]/.test(trimmed)) {
           const listPrefixMatch = line.match(/^(\s*(?:[-*+]|\d+\.)\s+)(.+)$/);
           if (listPrefixMatch) {
@@ -938,7 +947,7 @@ export function linkTermInMarkdown(rawMarkdown: string, term: string, targetTitl
     const pos = findUnlinkedPosition(line, cleanTerm);
     if (pos !== -1) {
       replaced = true;
-      return normalizeObsidianFormattedLinks(
+      return normalizeFormattedLinks(
         line.slice(0, pos) + replacement + line.slice(pos + cleanTerm.length)
       );
     }
@@ -1028,7 +1037,7 @@ export function buildVaultSnapshot(
     for (const sourceNote of notes) {
       if (sourceNote.id === targetNote.id) continue;
       const { body } = parseFrontmatter(sourceNote.raw_markdown);
-      const commentFreeBody = stripObsidianComments(body);
+      const commentFreeBody = stripDelimitedComments(body);
       commentFreeBody.split(/\r?\n/).forEach((line, lineIdx) => {
         const trimmed = line.trim();
         if (!trimmed || trimmed.startsWith('#')) return;

@@ -4,9 +4,11 @@ import {
   extractNoteSectionOrBlock,
   linkTermInMarkdown,
   markSelectionAsAiSafely,
+  normalizeFormattedLinks,
   normalizeObsidianFormattedLinks,
   parseNote,
   serializeMarkdownLossless,
+  stripDelimitedComments,
   stripObsidianComments,
   unmarkAiSpanSafely,
   verifyEntireMarkdown,
@@ -14,7 +16,7 @@ import {
 } from '../vaultEngine';
 import { ObsidianGraphSimulator, filterLocalSubgraph } from '../graphSim';
 
-describe('Mycelium Obsidian-Compatible Engine & AI Verifier', () => {
+describe('Mycelium Knowledge Engine & Epistemic Verifier', () => {
   const sampleNote = `---
 title: Mycelium Network
 aliases: [Mycelium, Wood Wide Web]
@@ -137,9 +139,9 @@ Already flagged: ==[AI:manual] Mycelium== in soil.
     expect(unflagged2).toContain('ai_status: verified');
   });
 
-  it('normalizes bold/italic Hypha links to Obsidian-compatible **[[Target]]** syntax', () => {
+  it('normalizes bold/italic Hypha links to clean **[[Target]]** syntax', () => {
     const raw = `We study [[**Mycelium Network**]] and [[*Fungi*]] and [[Hyphae|**Root Thread**]].`;
-    const normalized = normalizeObsidianFormattedLinks(raw);
+    const normalized = normalizeFormattedLinks(raw);
     expect(normalized).toBe(
       `We study **[[Mycelium Network]]** and *[[Fungi]]* and **[[Hyphae|Root Thread]]**.`
     );
@@ -193,7 +195,7 @@ Cordyceps is a genus of ascomycete fungi that includes about 600 species.`;
     expect(saved).not.toContain('# Cordyceps Militaris');
   });
 
-  it('strips %%Obsidian comments%% in Read mode and skips comments during AI flagging and Hypha linking', () => {
+  it('strips %%delimited comments%% in Read mode and skips comments during AI flagging and Hypha linking', () => {
     const mdWithComments = `---
 title: Spore
 ---
@@ -204,7 +206,7 @@ mentioning Fungi and Spore
 %%
 Real prose mentioning Fungi in nature.`;
 
-    const stripped = stripObsidianComments(mdWithComments);
+    const stripped = stripDelimitedComments(mdWithComments);
     expect(stripped).not.toContain('hidden inline comment');
     expect(stripped).not.toContain('Multi-line comment block');
     expect(stripped).toContain('Visible before  visible after.');
@@ -221,7 +223,7 @@ Real prose mentioning Fungi in nature.`;
     expect(flagged).toContain('Real prose mentioning ==[AI:manual] Fungi== in nature.');
   });
 
-  it('extracts #Heading sections and #^block-id blocks for Obsidian transclusion and resolves subfolder links', () => {
+  it('extracts #Heading sections and #^block-id blocks for transclusion and resolves subfolder links', () => {
     const noteBody = `# Symbiosis
 
 Intro paragraph about symbiosis ^intro-blk

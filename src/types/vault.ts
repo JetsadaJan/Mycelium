@@ -10,7 +10,7 @@ export interface AiSegment {
   source_hint?: string | null;
 }
 
-export interface WikiLinkRef {
+export interface HyphaLinkRef {
   target: string;
   target_slug: string;
   display_text: string;
@@ -20,6 +20,9 @@ export interface WikiLinkRef {
   context: string;
   raw: string;
 }
+
+/** Backward compatibility alias */
+export type WikiLinkRef = HyphaLinkRef;
 
 export interface BacklinkRef {
   source_id: string;
@@ -61,7 +64,7 @@ export interface NoteDocument {
   verified_at?: string | null;
   sources: string[];
   ai_segments: AiSegment[];
-  outgoing_links: WikiLinkRef[];
+  outgoing_links: HyphaLinkRef[];
   headings: HeadingRef[];
   word_count: number;
   updated_at: string;
@@ -104,7 +107,7 @@ export interface VaultSnapshot {
 
 export interface AiResearchRequest {
   topic: string;
-  mode: 'api' | 'ollama' | 'agent_wiki';
+  mode: 'api' | 'ollama' | 'agent_research' | 'agent_wiki';
   api_url?: string;
   api_key?: string;
   model?: string;

@@ -14,13 +14,16 @@ export interface SimForces {
  * - Low centerStrength (0.032) lets outer nodes breathe outward
  * - High damping (VELOCITY_DECAY = 0.34) eliminates rapid oscillation/shaking
  */
-export const DEFAULT_OBSIDIAN_FORCES: SimForces = {
+export const DEFAULT_GRAPH_FORCES: SimForces = {
   centerStrength: 0.032,
   repelStrength: 1750,
   linkStrength: 0.55,
   linkDistance: 235,
   collideRadius: 68,
 };
+
+/** Backward compatibility alias */
+export const DEFAULT_OBSIDIAN_FORCES = DEFAULT_GRAPH_FORCES;
 
 export interface SimNode extends GraphNode {
   x: number;
@@ -45,12 +48,12 @@ const ALPHA_MIN = 0.001;
 const ALPHA_DECAY = 0.045;
 const VELOCITY_DECAY = 0.34;
 
-export class ObsidianGraphSimulator {
+export class ColonyGraphSimulator {
   public nodes: SimNode[] = [];
   public links: SimLink[] = [];
   public alpha = 0.28;
   public alphaTarget = 0.0;
-  public forces: SimForces = { ...DEFAULT_OBSIDIAN_FORCES };
+  public forces: SimForces = { ...DEFAULT_GRAPH_FORCES };
 
   constructor(nodes: GraphNode[], edges: GraphEdge[], forces?: Partial<SimForces>) {
     if (forces) {
@@ -281,6 +284,9 @@ export class ObsidianGraphSimulator {
     return true;
   }
 }
+
+/** Backward compatibility alias */
+export const ObsidianGraphSimulator = ColonyGraphSimulator;
 
 export function filterLocalSubgraph(
   nodes: GraphNode[],

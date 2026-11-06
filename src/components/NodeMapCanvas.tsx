@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  DEFAULT_OBSIDIAN_FORCES,
-  ObsidianGraphSimulator,
+  ColonyGraphSimulator,
+  DEFAULT_GRAPH_FORCES,
   SimForces,
   SimNode,
   filterLocalSubgraph,
@@ -102,7 +102,7 @@ export function loadColonyColorSettings(colonyKey: string): ColonyColorSettings 
               : DEFAULT_DISPLAY_SETTINGS.baseNodeSize,
         },
         forces: {
-          ...DEFAULT_OBSIDIAN_FORCES,
+          ...DEFAULT_GRAPH_FORCES,
           ...(parsed.forces || {}),
         },
       };
@@ -115,7 +115,7 @@ export function loadColonyColorSettings(colonyKey: string): ColonyColorSettings 
     verificationColors: { ...DEFAULT_VERIFICATION_COLORS },
     clusterColors: {},
     display: { ...DEFAULT_DISPLAY_SETTINGS },
-    forces: { ...DEFAULT_OBSIDIAN_FORCES },
+    forces: { ...DEFAULT_GRAPH_FORCES },
   };
 }
 
@@ -216,7 +216,7 @@ export const NodeMapCanvas: React.FC<NodeMapCanvasProps> = ({
   compact = false,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const simRef = useRef<ObsidianGraphSimulator | null>(null);
+  const simRef = useRef<ColonyGraphSimulator | null>(null);
 
   const [localDepth, setLocalDepth] = useState<number>(1);
   const [showControls, setShowControls] = useState<boolean>(false);
@@ -435,7 +435,7 @@ export const NodeMapCanvas: React.FC<NodeMapCanvasProps> = ({
 
   useEffect(() => {
     if (!simRef.current) {
-      simRef.current = new ObsidianGraphSimulator(
+      simRef.current = new ColonyGraphSimulator(
         filteredGraph.nodes,
         filteredGraph.edges,
         forces
@@ -1250,7 +1250,7 @@ export const NodeMapCanvas: React.FC<NodeMapCanvasProps> = ({
             style={{
               padding: '4px 10px',
               fontSize: 11.5,
-              borderColor: mode === 'global' ? 'var(--wiki-link)' : 'transparent',
+              borderColor: mode === 'global' ? 'var(--hypha-link)' : 'transparent',
             }}
           >
             <Compass size={13} /> Colony Map
@@ -1262,7 +1262,7 @@ export const NodeMapCanvas: React.FC<NodeMapCanvasProps> = ({
             style={{
               padding: '4px 10px',
               fontSize: 11.5,
-              borderColor: mode === 'local' ? 'var(--wiki-link)' : 'transparent',
+              borderColor: mode === 'local' ? 'var(--hypha-link)' : 'transparent',
             }}
           >
             <Maximize2 size={13} /> Local Cluster ({localDepth} hop)
@@ -1321,7 +1321,7 @@ export const NodeMapCanvas: React.FC<NodeMapCanvasProps> = ({
                   fontWeight: 600,
                   cursor: 'pointer',
                   background:
-                    colorSettings.mode === 'verification' ? 'var(--wiki-link)' : 'transparent',
+                    colorSettings.mode === 'verification' ? 'var(--hypha-link)' : 'transparent',
                   color: colorSettings.mode === 'verification' ? '#fff' : 'var(--text-secondary)',
                 }}
               >
@@ -1338,7 +1338,7 @@ export const NodeMapCanvas: React.FC<NodeMapCanvasProps> = ({
                   fontWeight: 600,
                   cursor: 'pointer',
                   background:
-                    colorSettings.mode === 'cluster' ? 'var(--wiki-link)' : 'transparent',
+                    colorSettings.mode === 'cluster' ? 'var(--hypha-link)' : 'transparent',
                   color: colorSettings.mode === 'cluster' ? '#fff' : 'var(--text-secondary)',
                 }}
               >
@@ -1440,7 +1440,7 @@ export const NodeMapCanvas: React.FC<NodeMapCanvasProps> = ({
               style={{
                 padding: '3px 10px',
                 fontSize: 11,
-                borderColor: showControls ? 'var(--wiki-link)' : undefined,
+                borderColor: showControls ? 'var(--hypha-link)' : undefined,
                 background: showControls ? 'var(--bg-elevated)' : undefined,
               }}
             >
@@ -1484,7 +1484,7 @@ export const NodeMapCanvas: React.FC<NodeMapCanvasProps> = ({
                 fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.06em',
-                color: hoveredNodeId ? 'var(--wiki-link)' : 'var(--verified-emerald)',
+                color: hoveredNodeId ? 'var(--hypha-link)' : 'var(--verified-emerald)',
                 fontFamily: '"JetBrains Mono", monospace',
               }}
             >
@@ -1499,7 +1499,7 @@ export const NodeMapCanvas: React.FC<NodeMapCanvasProps> = ({
                 padding: '2px 8px',
                 borderRadius: 999,
                 background: 'var(--bg-elevated)',
-                color: 'var(--wiki-link)',
+                color: 'var(--hypha-link)',
                 fontWeight: 600,
               }}
             >
@@ -1554,7 +1554,7 @@ export const NodeMapCanvas: React.FC<NodeMapCanvasProps> = ({
                   background:
                     display.hyphaColorMode === 'in-out'
                       ? display.outgoingHyphaColor
-                      : 'var(--wiki-link)',
+                      : 'var(--hypha-link)',
                 }}
               />
               Out: <strong>{activeInspectNodeObj.out_degree}</strong>
@@ -1862,7 +1862,7 @@ export const NodeMapCanvas: React.FC<NodeMapCanvasProps> = ({
                       style={{
                         padding: '2px 7px',
                         fontSize: 10.5,
-                        borderColor: display.labelMode === m.id ? 'var(--wiki-link)' : undefined,
+                        borderColor: display.labelMode === m.id ? 'var(--hypha-link)' : undefined,
                       }}
                       onClick={() =>
                         updateColorSettings((prev) => ({
@@ -1886,7 +1886,7 @@ export const NodeMapCanvas: React.FC<NodeMapCanvasProps> = ({
                 }}
               >
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                  <Sparkles size={12} color="var(--wiki-link)" /> Bio-Signal Pulses on Hyphae
+                  <Sparkles size={12} color="var(--hypha-link)" /> Bio-Signal Pulses on Hyphae
                 </span>
                 <input
                   type="checkbox"
@@ -1968,10 +1968,10 @@ export const NodeMapCanvas: React.FC<NodeMapCanvasProps> = ({
                         padding: '4px 8px',
                         fontSize: 11,
                         borderColor:
-                          display.hyphaColorMode === hm.id ? 'var(--wiki-link)' : undefined,
+                          display.hyphaColorMode === hm.id ? 'var(--hypha-link)' : undefined,
                         background:
                           display.hyphaColorMode === hm.id
-                            ? 'var(--wiki-link-bg)'
+                            ? 'var(--hypha-link-bg)'
                             : 'var(--bg-elevated)',
                       }}
                     >
@@ -2073,7 +2073,7 @@ export const NodeMapCanvas: React.FC<NodeMapCanvasProps> = ({
                     padding: '5px 6px',
                     fontSize: 11,
                     borderColor:
-                      colorSettings.mode === 'verification' ? 'var(--wiki-link)' : undefined,
+                      colorSettings.mode === 'verification' ? 'var(--hypha-link)' : undefined,
                   }}
                 >
                   Verification Status
@@ -2087,7 +2087,7 @@ export const NodeMapCanvas: React.FC<NodeMapCanvasProps> = ({
                     justifyContent: 'center',
                     padding: '5px 6px',
                     fontSize: 11,
-                    borderColor: colorSettings.mode === 'cluster' ? 'var(--wiki-link)' : undefined,
+                    borderColor: colorSettings.mode === 'cluster' ? 'var(--hypha-link)' : undefined,
                   }}
                 >
                   By Cluster (#tag)
@@ -2336,7 +2336,7 @@ export const NodeMapCanvas: React.FC<NodeMapCanvasProps> = ({
                 onClick={() => {
                   updateColorSettings((prev) => ({
                     ...prev,
-                    forces: { ...DEFAULT_OBSIDIAN_FORCES },
+                    forces: { ...DEFAULT_GRAPH_FORCES },
                   }));
                   resetCamera();
                 }}

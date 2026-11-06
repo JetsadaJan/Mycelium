@@ -1,4 +1,4 @@
-use crate::models::{AiSegment, EpistemicStatus, HeadingRef, NoteDocument, WikiLinkRef};
+use crate::models::{AiSegment, EpistemicStatus, HeadingRef, HyphaLinkRef, NoteDocument, WikiLinkRef};
 use regex::Regex;
 use std::collections::HashMap;
 
@@ -28,7 +28,7 @@ pub fn normalize_id(input: &str) -> String {
     out.trim_matches('-').to_string()
 }
 
-pub fn strip_obsidian_comments(markdown: &str) -> String {
+pub fn strip_delimited_comments(markdown: &str) -> String {
     if !markdown.contains("%%") {
         return markdown.to_string();
     }
@@ -36,7 +36,13 @@ pub fn strip_obsidian_comments(markdown: &str) -> String {
     re.replace_all(markdown, "").to_string()
 }
 
-pub fn normalize_obsidian_formatted_links(markdown: &str) -> String {
+/// Backward compatibility alias
+#[inline]
+pub fn strip_obsidian_comments(markdown: &str) -> String {
+    strip_delimited_comments(markdown)
+}
+
+pub fn normalize_formatted_links(markdown: &str) -> String {
     let re = Regex::new(r"(!?)\[\[([^\[\]\n]+)\]\]").unwrap();
     re.replace_all(markdown, |caps: &regex::Captures| {
         let bang = &caps[1];
@@ -77,6 +83,12 @@ pub fn normalize_obsidian_formatted_links(markdown: &str) -> String {
         caps[0].to_string()
     })
     .to_string()
+}
+
+/// Backward compatibility alias
+#[inline]
+pub fn normalize_obsidian_formatted_links(markdown: &str) -> String {
+    normalize_formatted_links(markdown)
 }
 
 pub fn parse_frontmatter(raw: &str) -> (HashMap<String, String>, Vec<String>, Vec<String>, Vec<String>, &str) {
@@ -208,7 +220,7 @@ pub fn parse_note(rel_path: &str, raw_markdown: &str, updated_at: &str) -> NoteD
 
     let id = normalize_id(&file_stem);
     let body = body_slice.to_string();
-    let comment_free_body = strip_obsidian_comments(&body);
+    let comment_free_body = strip_delimited_comments(&body);
 
     // Extract inline #tags from comment-free body
     let tag_re = Regex::new(r"(?:^|\s)#([a-zA-Z0-9_\-\u0E00-\u0E7F/]+)").unwrap();
@@ -226,7 +238,7 @@ pub fn parse_note(rel_path: &str, raw_markdown: &str, updated_at: &str) -> NoteD
     }
 
     let headings = parse_headings(&comment_free_body);
-    let outgoing_links = parse_wikilinks(&comment_free_body);
+    let outgoing_links = parse_hypha_links(&comment_free_body);
     let ai_segments = parse_ai_segments(&body);
 
     let fm_status = frontmatter
@@ -306,7 +318,7 @@ pub fn parse_headings(body: &str) -> Vec<HeadingRef> {
     out
 }
 
-pub fn parse_wikilinks(body: &str) -> Vec<WikiLinkRef> {
+pub fn parse_hypha_links(body: &str) -> Vec<HyphaLinkRef> {
     let re = Regex::new(r"(!?)\[\[([^\[\]]+)\]\]").unwrap();
     let mut links = Vec::new();
 
@@ -354,6 +366,12 @@ pub fn parse_wikilinks(body: &str) -> Vec<WikiLinkRef> {
     }
 
     links
+}
+
+/// Backward compatibility alias
+#[inline]
+pub fn parse_wikilinks(body: &str) -> Vec<HyphaLinkRef> {
+    parse_hypha_links(body)
 }
 
 pub fn parse_ai_segments(body: &str) -> Vec<AiSegment> {
@@ -592,7 +610,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse_obsidian_frontmatter_and_wikilinks() {
+    fn test_parse_markdown_frontmatter_and_hypha_links() {
         let md = r#"---
 title: Mycelium Network
 aliases: [Wood Wide Web, เครือข่ายไมซีเลียม]
@@ -653,7 +671,7 @@ Normal text with ==[AI] chitin cell walls== inside."#;
     }
 
     #[test]
-    fn test_link_term_in_markdown_skips_existing_wikilinks() {
+    fn test_link_term_in_markdown_skips_existing_hypha_links() {
         let md = "---\ntitle: Forest\n---\n[[Spore]] dispersion and Spore germination.";
         let linked = link_term_in_markdown(md, "Spore", "Spore");
         assert_eq!(

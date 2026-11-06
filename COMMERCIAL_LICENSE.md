@@ -35,5 +35,5 @@ Before deploying Mycelium in a commercial team, embedding it into a commercial p
 
 Include:
 1. Organization name and jurisdiction
-2. Intended use case (Internal Team Wiki vs. Embedded Product vs. Hosted SaaS)
+2. Intended use case (Internal Knowledge Base / Team Colony vs. Embedded Product vs. Hosted SaaS)
 3. Estimated number of seats or projected annual revenue tier

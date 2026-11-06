@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AiResearchRequest {
     pub topic: String,
-    pub mode: String, // "api" | "ollama" | "agent_wiki"
+    pub mode: String, // "api" | "ollama" | "agent_research" | "agent_wiki"
     pub api_url: Option<String>,
     pub api_key: Option<String>,
     pub model: Option<String>,
@@ -28,11 +28,11 @@ pub fn build_agent_prompt(topic: &str, existing_titles: &[String]) -> String {
         .collect::<Vec<_>>()
         .join(", ");
     format!(
-        "Research \"{topic}\" and create or update `{topic}.md` in the Vault following `AGENTS.md`:\n\
+        "Research \"{topic}\" and create or update `{topic}.md` in the Colony following `AGENTS.md`:\n\
 1. Add YAML Frontmatter (`title: {topic}`, `ai_status: unverified`, `ai_source: agent`, `sources: [...]`).\n\
-2. Wrap AI-synthesized paragraphs in an Obsidian Callout `> [!ai] AI Research (Unverified)`.\n\
+2. Wrap AI-synthesized paragraphs in a Callout `> [!ai] AI Research (Unverified)`.\n\
 3. Wrap specific statistics or factual claims in `==[AI] ...==`.\n\
-4. Link related concepts using `[[WikiLinks]]` to existing Vault pages such as: {related}."
+4. Link related concepts using `[[Hyphae Links]]` to existing Colony Nodes such as: {related}."
     )
 }
 
@@ -107,7 +107,7 @@ pub fn research_topic(req: &AiResearchRequest) -> Result<AiResearchResponse, Str
         }
     }
 
-    let linked_extract = auto_inject_wikilinks(&wiki_extract, &req.topic, &req.existing_titles);
+    let linked_extract = auto_inject_hypha_links(&wiki_extract, &req.topic, &req.existing_titles);
     Ok(format_ai_response(
         &req.topic,
         &linked_extract,
@@ -126,7 +126,7 @@ fn fetch_wikipedia_summary(topic: &str) -> Option<(String, String)> {
     );
 
     let resp = ureq::get(&url)
-        .set("User-Agent", "MyceliumWiki/0.1 (Local Obsidian Knowledge Graph)")
+        .set("User-Agent", "Mycelium/0.1 (Local Knowledge Colony)")
         .call()
         .ok()?;
     let json: serde_json::Value = resp.into_json().ok()?;
@@ -159,8 +159,8 @@ fn call_ollama(
         .collect::<Vec<_>>()
         .join(", ");
     let prompt = format!(
-        "Write a concise encyclopedic summary about '{}' in English. \
-Use [[WikiLinks]] when referencing related topics ({}). \
+        "Write a concise summary about '{}' in English. \
+Use [[Links]] when referencing related topics ({}). \
 Wrap specific factual claims or statistics in ==[AI] claim==. \
 Reference context: {}",
         topic, links_hint, context
@@ -194,8 +194,8 @@ fn call_openai_compatible(
         .collect::<Vec<_>>()
         .join(", ");
     let prompt = format!(
-        "Write a concise Wiki synthesis about '{}' in English. \
-Use [[WikiLinks]] for related terms ({}). \
+        "Write a concise synthesis about '{}' in English. \
+Use [[Links]] for related terms ({}). \
 Wrap key claims in ==[AI] ...==. Grounding context: {}",
         topic, links_hint, context
     );
@@ -204,7 +204,7 @@ Wrap key claims in ==[AI] ...==. Grounding context: {}",
         .send_json(serde_json::json!({
             "model": model,
             "messages": [
-                { "role": "system", "content": "You are an epistemic Wiki researcher producing Obsidian-compatible Markdown in English." },
+                { "role": "system", "content": "You are an epistemic knowledge researcher producing standard Markdown in English." },
                 { "role": "user", "content": prompt }
             ]
         }))
@@ -219,7 +219,7 @@ Wrap key claims in ==[AI] ...==. Grounding context: {}",
         .ok_or_else(|| "Empty API response".to_string())
 }
 
-fn auto_inject_wikilinks(text: &str, current_topic: &str, existing_titles: &[String]) -> String {
+fn auto_inject_hypha_links(text: &str, current_topic: &str, existing_titles: &[String]) -> String {
     let mut out = text.to_string();
     for title in existing_titles {
         if title.eq_ignore_ascii_case(current_topic) || title.chars().count() < 3 {
@@ -260,7 +260,7 @@ fn format_ai_response(
     let related_line = if related_links.is_empty() {
         String::new()
     } else {
-        format!("\n\nRelated Vault Pages: {}", related_links.join(" • "))
+        format!("\n\nRelated Nodes: {}", related_links.join(" • "))
     };
 
     let sources_yaml = sources
@@ -270,7 +270,7 @@ fn format_ai_response(
         .join("\n");
 
     let markdown_page = format!(
-        "---\ntitle: {topic}\ntags: [wiki, ai-draft]\nai_status: unverified\nai_source: {provider}\nsources:\n{sources_yaml}\n---\n\n# {topic}\n\n{callout_block}\n\n## Key Claims Pending Review\n\n- ==[AI:{provider}] Initial synthesis for {topic} was automatically compiled and requires human verification before promotion=={related_line}\n"
+        "---\ntitle: {topic}\ntags: [colony, ai-draft]\nai_status: unverified\nai_source: {provider}\nsources:\n{sources_yaml}\n---\n\n# {topic}\n\n{callout_block}\n\n## Key Claims Pending Review\n\n- ==[AI:{provider}] Initial synthesis for {topic} was automatically compiled and requires human verification before promotion=={related_line}\n"
     );
 
     AiResearchResponse {

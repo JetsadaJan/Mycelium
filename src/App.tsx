@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { VaultSnapshot } from './types/vault';
 import { ColonyRecord, vaultClient } from './lib/vaultClient';
 import { normalizeId } from './lib/vaultEngine';
-import { WikiArticleView } from './components/WikiArticleView';
+import { NodeDocumentView } from './components/NodeDocumentView';
 import { ConnectionsInspector } from './components/ConnectionsInspector';
 import {
   NodeMapCanvas,
@@ -57,7 +57,7 @@ export const MyceliumLogoMark: React.FC<{
   size?: number;
   capColor?: string;
   hyphaeColor?: string;
-}> = ({ size = 21, capColor = 'var(--wiki-link)', hyphaeColor = 'var(--verified-emerald)' }) => (
+}> = ({ size = 21, capColor = 'var(--hypha-link)', hyphaeColor = 'var(--verified-emerald)' }) => (
   <svg
     width={size}
     height={size}
@@ -117,7 +117,7 @@ export const App: React.FC = () => {
   const [activeColony, setActiveColony] = useState<ColonyRecord>(vaultClient.getActiveColony());
 
   const [activeNoteId, setActiveNoteId] = useState<string>('mycelium-network');
-  const [viewStage, setViewStage] = useState<'wiki' | 'graph'>('wiki');
+  const [viewStage, setViewStage] = useState<'article' | 'graph'>('article');
   const [articleMode, setArticleMode] = useState<'read' | 'write'>('read');
   const [graphScope, setGraphScope] = useState<'global' | 'local'>('global');
   const [themeState, setThemeState] = useState(() => loadStudioThemeState());
@@ -163,7 +163,7 @@ export const App: React.FC = () => {
 
   const [showNewNodeModal, setShowNewNodeModal] = useState<boolean>(false);
   const [newNodeTitle, setNewNodeTitle] = useState<string>('');
-  const [newNodeClusters, setNewNodeClusters] = useState<string>('colony, wiki');
+  const [newNodeClusters, setNewNodeClusters] = useState<string>('colony, core');
   const [newNodeAliases, setNewNodeAliases] = useState<string>('');
   const [newNodeMode, setNewNodeMode] = useState<'manual' | 'ai'>('manual');
 
@@ -350,7 +350,7 @@ export const App: React.FC = () => {
   }, []);
 
   const guardUnsavedChanges = (action: () => void) => {
-    if (viewStage === 'wiki' && articleMode === 'write' && writeDirtyState.isDirty) {
+    if (viewStage === 'article' && articleMode === 'write' && writeDirtyState.isDirty) {
       setPendingUnsavedAction(() => action);
       return;
     }
@@ -418,7 +418,7 @@ export const App: React.FC = () => {
     if (existing) {
       guardUnsavedChanges(() => {
         setActiveNoteId(existing.id);
-        setViewStage('wiki');
+        setViewStage('article');
       });
       return;
     }
@@ -449,7 +449,7 @@ Write verified notes for **${cleanTitle}** or use the **AI Synthesis Co-Pilot** 
       const updated = await vaultClient.saveNote(newRelPath, initialMd);
       syncColonyState(updated);
       setActiveNoteId(normalizeId(cleanTitle));
-      setViewStage('wiki');
+      setViewStage('article');
       setArticleMode('write');
     }
   };
@@ -520,13 +520,13 @@ Connected via Hypha from [[${activeNote.title}]].
     if (newNodeMode === 'ai' && snapshot) {
       const aiRes = await vaultClient.researchWithAi({
         topic: cleanTitle,
-        mode: 'agent_wiki',
+        mode: 'agent_research',
         existing_titles: snapshot.notes.map((n) => n.title),
       });
       const updated = await vaultClient.saveNote(`${cleanTitle}.md`, aiRes.markdown_page);
       syncColonyState(updated);
       setActiveNoteId(normalizeId(cleanTitle));
-      setViewStage('wiki');
+      setViewStage('article');
       setArticleMode('read');
     } else {
       const md = `---
@@ -547,7 +547,7 @@ Start writing your Node content here, and connect related concepts using [[${
       const updated = await vaultClient.saveNote(`${cleanTitle}.md`, md);
       syncColonyState(updated);
       setActiveNoteId(normalizeId(cleanTitle));
-      setViewStage('wiki');
+      setViewStage('article');
       setArticleMode('write');
     }
 
@@ -612,7 +612,7 @@ Start writing your Node content here, and connect related concepts using [[${
 
           <div
             className="brand-mark"
-            title="Mycelium — Personal Wiki & Epistemic Graph Studio (Click to open Studio Settings)"
+            title="Mycelium — Knowledge Colony & Epistemic Studio (Click to open Studio Settings)"
             onClick={() => setShowSettingsModal(true)}
             style={{
               cursor: 'pointer',
@@ -668,11 +668,11 @@ Start writing your Node content here, and connect related concepts using [[${
           <button
             type="button"
             className={`segmented-pill ${
-              viewStage === 'wiki' && articleMode === 'read' ? 'active' : ''
+              viewStage === 'article' && articleMode === 'read' ? 'active' : ''
             }`}
             onClick={() =>
               guardUnsavedChanges(() => {
-                setViewStage('wiki');
+                setViewStage('article');
                 setArticleMode('read');
               })
             }
@@ -682,15 +682,15 @@ Start writing your Node content here, and connect related concepts using [[${
           <button
             type="button"
             className={`segmented-pill ${
-              viewStage === 'wiki' && articleMode === 'write' ? 'active' : ''
+              viewStage === 'article' && articleMode === 'write' ? 'active' : ''
             }`}
             onClick={() => {
-              setViewStage('wiki');
+              setViewStage('article');
               setArticleMode('write');
             }}
           >
             <PenTool size={12.5} /> Write Node
-            {viewStage === 'wiki' && articleMode === 'write' && writeDirtyState.isDirty && (
+            {viewStage === 'article' && articleMode === 'write' && writeDirtyState.isDirty && (
               <span
                 style={{
                   width: 6,
@@ -734,10 +734,10 @@ Start writing your Node content here, and connect related concepts using [[${
             title="Open Studio Settings (Themes, Custom Colors, Vector Logo, AI Co-Pilot & Colony Tools)"
             style={{ padding: '3px 9px', fontSize: 11, fontWeight: 600 }}
           >
-            <Settings size={12.5} color="var(--wiki-link)" /> Settings
+            <Settings size={12.5} color="var(--hypha-link)" /> Settings
           </button>
 
-          {viewStage === 'wiki' && (
+          {viewStage === 'article' && (
             <button
               type="button"
               className="btn-subtle"
@@ -795,7 +795,7 @@ Start writing your Node content here, and connect related concepts using [[${
                   justifyContent: 'center',
                   padding: '4px 6px',
                   fontSize: 11,
-                  borderColor: sidebarFilter === f ? 'var(--wiki-link)' : undefined,
+                  borderColor: sidebarFilter === f ? 'var(--hypha-link)' : undefined,
                 }}
               >
                 {f === 'all' ? 'All Nodes' : f === 'ai' ? 'AI Drafts' : 'Verified'}
@@ -815,7 +815,7 @@ Start writing your Node content here, and connect related concepts using [[${
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: 'var(--wiki-link)',
+                  color: 'var(--hypha-link)',
                   fontSize: 10.5,
                   cursor: 'pointer',
                 }}
@@ -840,7 +840,7 @@ Start writing your Node content here, and connect related concepts using [[${
               style={{
                 padding: '3px 9px',
                 fontSize: 11,
-                borderColor: activeClusters.length === 0 ? 'var(--wiki-link)' : undefined,
+                borderColor: activeClusters.length === 0 ? 'var(--hypha-link)' : undefined,
               }}
             >
               All
@@ -856,8 +856,8 @@ Start writing your Node content here, and connect related concepts using [[${
                   style={{
                     padding: '3px 9px',
                     fontSize: 11,
-                    borderColor: isSelected ? 'var(--wiki-link)' : undefined,
-                    background: isSelected ? 'var(--wiki-link-bg)' : undefined,
+                    borderColor: isSelected ? 'var(--hypha-link)' : undefined,
+                    background: isSelected ? 'var(--hypha-link-bg)' : undefined,
                     fontWeight: isSelected ? 700 : 500,
                   }}
                   title="Click to toggle cluster (multi-cluster filter)"
@@ -904,7 +904,7 @@ Start writing your Node content here, and connect related concepts using [[${
                   onClick={() =>
                     guardUnsavedChanges(() => {
                       setActiveNoteId(note.id);
-                      setViewStage('wiki');
+                      setViewStage('article');
                     })
                   }
                 >
@@ -986,7 +986,7 @@ Start writing your Node content here, and connect related concepts using [[${
           </button>
 
           {/* Right Edge Dock Toggle Button (in Read/Write Stage) */}
-          {viewStage === 'wiki' && (
+          {viewStage === 'article' && (
             <button
               type="button"
               onClick={() => setRightSidebarOpen((v) => !v)}
@@ -1037,12 +1037,12 @@ Start writing your Node content here, and connect related concepts using [[${
                 } else {
                   setActiveNoteId(nodeId);
                   setArticleMode('read');
-                  setViewStage('wiki');
+                  setViewStage('article');
                 }
               }}
             />
           ) : (
-            <WikiArticleView
+            <NodeDocumentView
               note={activeNote}
               allNotes={snapshot.notes}
               mode={articleMode}
@@ -1118,7 +1118,7 @@ Start writing your Node content here, and connect related concepts using [[${
         </main>
 
         {/* Right Sidebar: Incoming Hyphae, Outgoing Hyphae, Latent Hyphae & Local Cluster Map */}
-        {viewStage === 'wiki' && rightSidebarOpen && (
+        {viewStage === 'article' && rightSidebarOpen && (
           <ConnectionsInspector
             activeNote={activeNote}
             allNotes={snapshot.notes}
@@ -1179,7 +1179,7 @@ Start writing your Node content here, and connect related concepts using [[${
                     Colony Manager & Saved Locations
                   </h2>
                   <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                    Switch between remembered Colonies or open any Obsidian Compat folder
+                    Switch between remembered Colonies or open any local Markdown folder
                   </div>
                 </div>
               </div>
@@ -1669,7 +1669,7 @@ Start writing your Node content here, and connect related concepts using [[${
                 }}
               >
                 <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <Tag size={11} color="var(--wiki-link)" /> Existing Colony Clusters (click to
+                  <Tag size={11} color="var(--hypha-link)" /> Existing Colony Clusters (click to
                   add/remove — prevents typos):
                 </span>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -1931,7 +1931,7 @@ Start writing your Node content here, and connect related concepts using [[${
                     gap: 6,
                   }}
                 >
-                  <Palette size={13} color="var(--wiki-link)" /> Core Theme Presets (4 Locked Studio Signatures)
+                  <Palette size={13} color="var(--hypha-link)" /> Core Theme Presets (4 Locked Studio Signatures)
                 </span>
                 <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                   Low-saturation, eye-friendly contrast
@@ -2297,7 +2297,7 @@ Start writing your Node content here, and connect related concepts using [[${
             const updated = await vaultClient.saveNote(relPath, rawMarkdown);
             syncColonyState(updated);
             setActiveNoteId(normalizeId(title));
-            setViewStage('wiki');
+            setViewStage('article');
           }}
           onAppendBlockToCurrent={async (markdownBlock) => {
             const appended = `${activeNote.raw_markdown.trimEnd()}\n\n${markdownBlock}\n`;

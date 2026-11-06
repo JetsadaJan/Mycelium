@@ -1,4 +1,4 @@
-use mycelium_core::ai::{research_topic, AiResearchRequest};
+use mycelium_core::ai::{research_topic, verify_api_key, AiResearchRequest, VerifyKeyPayload};
 use mycelium_core::vault::VaultEngine;
 use serde::Deserialize;
 use std::env;
@@ -433,6 +433,12 @@ POSIX path of (choose folder with prompt "Select Colony Directory:")"#;
                 serde_json::from_str::<AiResearchRequest>(&body_str)
                     .map_err(|e| e.to_string())
                     .and_then(|req| research_topic(&req))
+                    .and_then(|res| serde_json::to_string(&res).map_err(|e| e.to_string()))
+            }
+            (&Method::Post, "/api/ai/verify-key") => {
+                serde_json::from_str::<VerifyKeyPayload>(&body_str)
+                    .map_err(|e| e.to_string())
+                    .and_then(|payload| verify_api_key(&payload))
                     .and_then(|res| serde_json::to_string(&res).map_err(|e| e.to_string()))
             }
             (&Method::Post, "/api/asset/upload") => {

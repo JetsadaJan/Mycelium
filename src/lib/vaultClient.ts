@@ -7,8 +7,11 @@ export const API_BASE =
 import {
   AiResearchRequest,
   AiResearchResponse,
+  StudioAiConfig,
   VaultSnapshot,
   VerificationAuditEntry,
+  VerifyKeyPayload,
+  VerifyKeyResponse,
 } from '../types/vault';
 import {
   buildVaultSnapshot,
@@ -17,6 +20,36 @@ import {
   verifyEntireMarkdown,
   verifySegmentInMarkdown,
 } from './vaultEngine';
+
+export const DEFAULT_AI_CONFIG: StudioAiConfig = {
+  provider: 'gemini',
+  apiKey: '',
+  apiUrl: 'https://generativelanguage.googleapis.com',
+  model: 'gemini-2.5-flash',
+  lastVerifiedStatus: 'untested',
+};
+
+export const AI_CONFIG_STORAGE_KEY = 'mycelium_ai_config_v1';
+
+export function getSavedAiConfig(): StudioAiConfig {
+  try {
+    const raw = localStorage.getItem(AI_CONFIG_STORAGE_KEY);
+    if (raw) {
+      return { ...DEFAULT_AI_CONFIG, ...JSON.parse(raw) };
+    }
+  } catch {
+    // Ignore JSON parse error
+  }
+  return DEFAULT_AI_CONFIG;
+}
+
+export function saveAiConfig(cfg: StudioAiConfig): void {
+  try {
+    localStorage.setItem(AI_CONFIG_STORAGE_KEY, JSON.stringify(cfg));
+  } catch {
+    // Ignore local storage write errors
+  }
+}
 
 export interface ColonyRecord {
   id: string;
@@ -795,6 +828,32 @@ class VaultClient {
     this.persistColonyRegistry();
     this.persistLocalState();
     return this.switchColony('sample-colony');
+  }
+
+  public async verifyApiKey(payload: VerifyKeyPayload): Promise<VerifyKeyResponse> {
+    try {
+      const res = await fetch(`${API_BASE}/api/ai/verify-key`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        return await res.json();
+      } else {
+        const text = await res.text();
+        return {
+          ok: false,
+          provider: payload.provider,
+          message: `Server returned error (${res.status}): ${text || res.statusText}`,
+        };
+      }
+    } catch (e: any) {
+      return {
+        ok: false,
+        provider: payload.provider,
+        message: `Connection error: ${e?.message || e}. Ensure Mycelium core is running.`,
+      };
+    }
   }
 
   public async researchWithAi(req: AiResearchRequest): Promise<AiResearchResponse> {

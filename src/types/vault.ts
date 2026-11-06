@@ -122,3 +122,28 @@ export interface AiResearchResponse {
   provider_used: string;
   agent_prompt: string;
 }
+
+export type AiProviderType = 'gemini' | 'openai' | 'openrouter' | 'ollama' | 'custom';
+
+export interface StudioAiConfig {
+  provider: AiProviderType;
+  apiKey: string;
+  apiUrl: string;
+  model: string;
+  lastVerifiedStatus?: 'valid' | 'invalid' | 'untested';
+  lastVerifiedMessage?: string;
+  lastVerifiedAt?: string;
+}
+
+export interface VerifyKeyPayload {
+  provider: string;
+  api_key: string;
+  api_url?: string;
+  model?: string;
+}
+
+export interface VerifyKeyResponse {
+  ok: boolean;
+  provider: string;
+  message: string;
+}

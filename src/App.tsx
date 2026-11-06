@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { VaultSnapshot } from './types/vault';
-import { ColonyRecord, vaultClient } from './lib/vaultClient';
+import { StudioAiConfig, VaultSnapshot } from './types/vault';
+import { ColonyRecord, getSavedAiConfig, saveAiConfig, vaultClient } from './lib/vaultClient';
 import { normalizeId } from './lib/vaultEngine';
 import { NodeDocumentView } from './components/NodeDocumentView';
 import { ConnectionsInspector } from './components/ConnectionsInspector';
@@ -125,6 +125,10 @@ export const App: React.FC = () => {
     isColorDark(loadStudioThemeState().activeColors.bgCanvas) ? 'dark' : 'light'
   );
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
+  const [aiConfig, setAiConfig] = useState<StudioAiConfig>(() => getSavedAiConfig());
+  const [isVerifyingAiKey, setIsVerifyingAiKey] = useState<boolean>(false);
+  const [verifyKeyFeedback, setVerifyKeyFeedback] = useState<{ ok: boolean; message: string } | null>(null);
+  const [showAiKeyPlain, setShowAiKeyPlain] = useState<boolean>(false);
   const [newPresetName, setNewPresetName] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sidebarFilter, setSidebarFilter] = useState<'all' | 'ai' | 'verified'>('all');
@@ -166,6 +170,54 @@ export const App: React.FC = () => {
   const [newNodeClusters, setNewNodeClusters] = useState<string>('colony, core');
   const [newNodeAliases, setNewNodeAliases] = useState<string>('');
   const [newNodeMode, setNewNodeMode] = useState<'manual' | 'ai'>('manual');
+
+  const updateAiConfigField = <K extends keyof StudioAiConfig>(field: K, value: StudioAiConfig[K]) => {
+    setAiConfig((prev) => {
+      const next = { ...prev, [field]: value };
+      saveAiConfig(next);
+      return next;
+    });
+    setVerifyKeyFeedback(null);
+  };
+
+  const handleVerifyAiKey = async () => {
+    setIsVerifyingAiKey(true);
+    setVerifyKeyFeedback(null);
+    try {
+      const res = await vaultClient.verifyApiKey({
+        provider: aiConfig.provider,
+        api_key: aiConfig.apiKey,
+        api_url: aiConfig.apiUrl,
+        model: aiConfig.model,
+      });
+      setVerifyKeyFeedback({ ok: res.ok, message: res.message });
+      setAiConfig((prev) => {
+        const next: StudioAiConfig = {
+          ...prev,
+          lastVerifiedStatus: res.ok ? 'valid' : 'invalid',
+          lastVerifiedMessage: res.message,
+          lastVerifiedAt: new Date().toISOString(),
+        };
+        saveAiConfig(next);
+        return next;
+      });
+    } catch (e: any) {
+      const msg = `Verification failed: ${e?.message || e}`;
+      setVerifyKeyFeedback({ ok: false, message: msg });
+      setAiConfig((prev) => {
+        const next: StudioAiConfig = {
+          ...prev,
+          lastVerifiedStatus: 'invalid',
+          lastVerifiedMessage: msg,
+          lastVerifiedAt: new Date().toISOString(),
+        };
+        saveAiConfig(next);
+        return next;
+      });
+    } finally {
+      setIsVerifyingAiKey(false);
+    }
+  };
 
   const syncColonyState = (snap: VaultSnapshot) => {
     setSnapshot(snap);
@@ -2129,6 +2181,278 @@ Start writing your Node content here, and connect related concepts using [[${
               )}
             </div>
 
+            {/* Central Studio AI API Settings & Key Health Check */}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 14,
+                padding: '16px',
+                borderRadius: 16,
+                background: 'var(--bg-panel)',
+                border: '1px solid var(--border-subtle)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Sparkles size={16} color="var(--ai-amber)" />
+                    Central AI Synthesis & API Key Vault
+                  </div>
+                  <div style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>
+                    Saved permanently in this app — automatically powers node synthesis, research, and auto-completion
+                  </div>
+                </div>
+
+                {/* Key Status Pill */}
+                {aiConfig.apiKey.trim() ? (
+                  aiConfig.lastVerifiedStatus === 'valid' ? (
+                    <div
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 5,
+                        padding: '4px 9px',
+                        borderRadius: 999,
+                        background: 'rgba(52, 211, 153, 0.14)',
+                        border: '1px solid rgba(52, 211, 153, 0.35)',
+                        color: 'var(--verified-emerald)',
+                        fontSize: 11.5,
+                        fontWeight: 600,
+                      }}
+                    >
+                      <Check size={13} /> Key Verified & Active
+                    </div>
+                  ) : aiConfig.lastVerifiedStatus === 'invalid' ? (
+                    <div
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 5,
+                        padding: '4px 9px',
+                        borderRadius: 999,
+                        background: 'rgba(239, 68, 68, 0.14)',
+                        border: '1px solid rgba(239, 68, 68, 0.35)',
+                        color: '#f87171',
+                        fontSize: 11.5,
+                        fontWeight: 600,
+                      }}
+                    >
+                      <AlertTriangle size={13} /> Key Issue Detected
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 5,
+                        padding: '4px 9px',
+                        borderRadius: 999,
+                        background: 'rgba(245, 158, 11, 0.12)',
+                        border: '1px solid rgba(245, 158, 11, 0.35)',
+                        color: 'var(--ai-amber)',
+                        fontSize: 11.5,
+                        fontWeight: 500,
+                      }}
+                    >
+                      Untested Key
+                    </div>
+                  )
+                ) : (
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 5,
+                      padding: '4px 9px',
+                      borderRadius: 999,
+                      background: 'var(--bg-elevated)',
+                      border: '1px solid var(--border-subtle)',
+                      color: 'var(--text-muted)',
+                      fontSize: 11.5,
+                    }}
+                  >
+                    No Key Configured
+                  </div>
+                )}
+              </div>
+
+              {/* Provider Quick Picker */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 6 }}>
+                {[
+                  { id: 'gemini', label: 'Google Gemini', defaultUrl: 'https://generativelanguage.googleapis.com', defaultModel: 'gemini-2.5-flash' },
+                  { id: 'openai', label: 'OpenAI', defaultUrl: 'https://api.openai.com/v1/chat/completions', defaultModel: 'gpt-4o-mini' },
+                  { id: 'openrouter', label: 'OpenRouter', defaultUrl: 'https://openrouter.ai/api/v1/chat/completions', defaultModel: 'google/gemini-2.5-flash' },
+                  { id: 'ollama', label: 'Local Ollama', defaultUrl: 'http://localhost:11434/api/tags', defaultModel: 'llama3.2' },
+                  { id: 'custom', label: 'Custom (OpenAI API)', defaultUrl: '', defaultModel: '' },
+                ].map((p) => {
+                  const isSelected = aiConfig.provider === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => {
+                        updateAiConfigField('provider', p.id as any);
+                        if (p.defaultUrl) updateAiConfigField('apiUrl', p.defaultUrl);
+                        if (p.defaultModel) updateAiConfigField('model', p.defaultModel);
+                      }}
+                      style={{
+                        padding: '8px 10px',
+                        borderRadius: 10,
+                        border: isSelected ? '1.5px solid var(--ai-amber)' : '1px solid var(--border-subtle)',
+                        background: isSelected ? 'rgba(245, 158, 11, 0.1)' : 'var(--bg-elevated)',
+                        color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
+                        fontSize: 11.5,
+                        fontWeight: isSelected ? 600 : 500,
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      {p.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* API Key Input Row */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>
+                    API Key {aiConfig.provider === 'ollama' && <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(Not required for Ollama)</span>}
+                  </label>
+                  {aiConfig.apiKey && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAiKeyPlain(!showAiKeyPlain)}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'var(--text-secondary)',
+                        cursor: 'pointer',
+                        fontSize: 11,
+                        padding: 0,
+                      }}
+                    >
+                      {showAiKeyPlain ? 'Hide Key' : 'Reveal Key'}
+                    </button>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    type={showAiKeyPlain ? 'text' : 'password'}
+                    value={aiConfig.apiKey}
+                    onChange={(e) => updateAiConfigField('apiKey', e.target.value)}
+                    placeholder={
+                      aiConfig.provider === 'gemini'
+                        ? 'AIzaSy...'
+                        : aiConfig.provider === 'openai'
+                        ? 'sk-proj-...'
+                        : aiConfig.provider === 'openrouter'
+                        ? 'sk-or-v1-...'
+                        : aiConfig.provider === 'ollama'
+                        ? 'Not required for local Ollama'
+                        : 'Your API key...'
+                    }
+                    disabled={aiConfig.provider === 'ollama'}
+                    style={{
+                      flex: 1,
+                      padding: '8px 12px',
+                      borderRadius: 8,
+                      border: '1px solid var(--border-strong)',
+                      background: 'var(--bg-elevated)',
+                      color: 'var(--text-primary)',
+                      fontFamily: aiConfig.apiKey && !showAiKeyPlain ? 'inherit' : '"JetBrains Mono", monospace',
+                      fontSize: 12.5,
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="btn-amber"
+                    onClick={handleVerifyAiKey}
+                    disabled={isVerifyingAiKey || (aiConfig.provider !== 'ollama' && !aiConfig.apiKey.trim())}
+                    style={{ padding: '8px 14px', fontSize: 12, whiteSpace: 'nowrap' }}
+                  >
+                    {isVerifyingAiKey ? 'Testing Connection...' : 'Verify Key Now'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Endpoint URL & Model Fields */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 8 }}>
+                <div>
+                  <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
+                    Endpoint URL
+                  </label>
+                  <input
+                    type="text"
+                    value={aiConfig.apiUrl}
+                    onChange={(e) => updateAiConfigField('apiUrl', e.target.value)}
+                    placeholder="Endpoint URL"
+                    style={{
+                      width: '100%',
+                      padding: '7px 10px',
+                      borderRadius: 8,
+                      border: '1px solid var(--border-subtle)',
+                      background: 'var(--bg-elevated)',
+                      color: 'var(--text-primary)',
+                      fontSize: 11.5,
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
+                    Model Identifier
+                  </label>
+                  <input
+                    type="text"
+                    value={aiConfig.model}
+                    onChange={(e) => updateAiConfigField('model', e.target.value)}
+                    placeholder="e.g. gemini-2.5-flash, gpt-4o-mini"
+                    style={{
+                      width: '100%',
+                      padding: '7px 10px',
+                      borderRadius: 8,
+                      border: '1px solid var(--border-subtle)',
+                      background: 'var(--bg-elevated)',
+                      color: 'var(--text-primary)',
+                      fontSize: 11.5,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Key Verification Live Result / Error Alert */}
+              {verifyKeyFeedback && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 10,
+                    padding: '10px 14px',
+                    borderRadius: 10,
+                    background: verifyKeyFeedback.ok ? 'rgba(52, 211, 153, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                    border: `1px solid ${verifyKeyFeedback.ok ? 'rgba(52, 211, 153, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`,
+                    color: verifyKeyFeedback.ok ? 'var(--verified-emerald)' : '#f87171',
+                    fontSize: 12,
+                    lineHeight: 1.45,
+                  }}
+                >
+                  {verifyKeyFeedback.ok ? (
+                    <Check size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+                  ) : (
+                    <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+                  )}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600 }}>
+                      {verifyKeyFeedback.ok ? 'API Key Health: OK' : 'API Key Issue Detected'}
+                    </div>
+                    <div>{verifyKeyFeedback.message}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Harmonious Color & Vector Logo Customizer ("แต่งยังไงก็สวย") */}
             <div
               style={{
@@ -2291,6 +2615,10 @@ Start writing your Node content here, and connect related concepts using [[${
           initialTopic={aiModalTopic}
           existingTitles={snapshot.notes.map((n) => n.title)}
           onClose={() => setAiModalTopic(null)}
+          onOpenSettings={() => {
+            setAiModalTopic(null);
+            setShowSettingsModal(true);
+          }}
           onRunResearch={(req) => vaultClient.researchWithAi(req)}
           onCreateOrUpdatePage={async (title, rawMarkdown) => {
             const relPath = `${title.trim()}.md`;

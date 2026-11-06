@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AiResearchRequest, AiResearchResponse } from '../types/vault';
-import { Bot, Check, Copy, Cpu, Globe, Sparkles, X } from 'lucide-react';
+import { getSavedAiConfig } from '../lib/vaultClient';
+import { Bot, Check, Copy, Cpu, Globe, Key, Settings, Sparkles, X, AlertTriangle } from 'lucide-react';
 
 interface AiResearchModalProps {
   initialTopic: string;
   existingTitles: string[];
   onClose: () => void;
+  onOpenSettings?: () => void;
   onRunResearch: (req: AiResearchRequest) => Promise<AiResearchResponse>;
   onCreateOrUpdatePage: (title: string, rawMarkdown: string) => void;
   onAppendBlockToCurrent: (markdownBlock: string) => void;
@@ -15,23 +17,37 @@ export const AiResearchModal: React.FC<AiResearchModalProps> = ({
   initialTopic,
   existingTitles,
   onClose,
+  onOpenSettings,
   onRunResearch,
   onCreateOrUpdatePage,
   onAppendBlockToCurrent,
 }) => {
+  const savedCfg = getSavedAiConfig();
   const [topic, setTopic] = useState(initialTopic);
   const [mode, setMode] = useState<'agent_research' | 'agent_wiki' | 'api' | 'ollama'>('agent_research');
-  const [apiUrl, setApiUrl] = useState('https://api.openai.com/v1/chat/completions');
-  const [apiKey, setApiKey] = useState('');
-  const [model, setModel] = useState('gpt-4o-mini');
+  const [apiUrl, setApiUrl] = useState(savedCfg.apiUrl || 'https://generativelanguage.googleapis.com');
+  const [apiKey, setApiKey] = useState(savedCfg.apiKey || '');
+  const [model, setModel] = useState(savedCfg.model || 'gemini-2.5-flash');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AiResearchResponse | null>(null);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
+  const [researchError, setResearchError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // When switching to 'api' mode, default to the saved studio configuration
+    if (mode === 'api') {
+      const cfg = getSavedAiConfig();
+      if (cfg.apiKey) setApiKey(cfg.apiKey);
+      if (cfg.apiUrl) setApiUrl(cfg.apiUrl);
+      if (cfg.model) setModel(cfg.model);
+    }
+  }, [mode]);
 
   const handleSynthesize = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!topic.trim()) return;
     setLoading(true);
+    setResearchError(null);
     try {
       const res = await onRunResearch({
         topic: topic.trim(),
@@ -42,6 +58,8 @@ export const AiResearchModal: React.FC<AiResearchModalProps> = ({
         existing_titles: existingTitles,
       });
       setResult(res);
+    } catch (err: any) {
+      setResearchError(err?.message || String(err));
     } finally {
       setLoading(false);
     }
@@ -224,20 +242,73 @@ export const AiResearchModal: React.FC<AiResearchModalProps> = ({
                 }}
               />
               {mode === 'api' && (
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="API Key (optional — falls back to grounded synthesis if empty)"
-                  style={{
-                    gridColumn: '1 / -1',
-                    padding: '7px 10px',
-                    borderRadius: 6,
-                    border: '1px solid var(--border-subtle)',
-                    background: 'var(--bg-panel)',
-                    fontSize: 12,
-                  }}
-                />
+                <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <input
+                    type="password"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    placeholder="API Key (Leave empty to use central Studio Settings key or grounded synthesis)"
+                    style={{
+                      padding: '7px 10px',
+                      borderRadius: 6,
+                      border: '1px solid var(--border-subtle)',
+                      background: 'var(--bg-panel)',
+                      fontSize: 12,
+                    }}
+                  />
+                  {savedCfg.apiKey && (
+                    <div style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Key size={12} color="var(--ai-amber)" />
+                      <span>Loaded from Studio Settings ({savedCfg.provider.toUpperCase()} • {savedCfg.apiKey.slice(0, 6)}...{savedCfg.apiKey.slice(-4)})</span>
+                      {onOpenSettings && (
+                        <button
+                          type="button"
+                          onClick={onOpenSettings}
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'var(--hypha-link)',
+                            cursor: 'pointer',
+                            fontSize: 11,
+                            padding: 0,
+                            textDecoration: 'underline',
+                          }}
+                        >
+                          Configure in Settings
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {researchError && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '9px 12px',
+                borderRadius: 8,
+                background: 'rgba(239, 68, 68, 0.12)',
+                border: '1px solid rgba(239, 68, 68, 0.35)',
+                color: '#f87171',
+                fontSize: 12,
+              }}
+            >
+              <AlertTriangle size={15} style={{ flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>{researchError}</div>
+              {onOpenSettings && (
+                <button
+                  type="button"
+                  className="btn-subtle"
+                  onClick={onOpenSettings}
+                  style={{ fontSize: 11, padding: '3px 8px', borderColor: 'rgba(239, 68, 68, 0.4)' }}
+                >
+                  <Settings size={12} /> Recheck Key
+                </button>
               )}
             </div>
           )}

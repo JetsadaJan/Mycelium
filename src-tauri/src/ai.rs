@@ -1,6 +1,166 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VerifyKeyPayload {
+    pub provider: String, // "openai" | "gemini" | "openrouter" | "custom" | "ollama"
+    pub api_key: String,
+    pub api_url: Option<String>,
+    pub model: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VerifyKeyResponse {
+    pub ok: bool,
+    pub provider: String,
+    pub message: String,
+}
+
+pub fn verify_api_key(payload: &VerifyKeyPayload) -> Result<VerifyKeyResponse, String> {
+    let key = payload.api_key.trim();
+    if payload.provider != "ollama" && key.is_empty() {
+        return Ok(VerifyKeyResponse {
+            ok: false,
+            provider: payload.provider.clone(),
+            message: "API Key cannot be blank. Please enter a valid key.".to_string(),
+        });
+    }
+
+    if payload.provider == "ollama" {
+        let url = payload
+            .api_url
+            .clone()
+            .unwrap_or_else(|| "http://localhost:11434/api/tags".to_string());
+        match ureq::get(&url).timeout(std::time::Duration::from_secs(6)).call() {
+            Ok(resp) if resp.status() == 200 => Ok(VerifyKeyResponse {
+                ok: true,
+                provider: "ollama".to_string(),
+                message: "Connected to local Ollama instance successfully!".to_string(),
+            }),
+            Ok(resp) => Ok(VerifyKeyResponse {
+                ok: false,
+                provider: "ollama".to_string(),
+                message: format!("Ollama returned unexpected HTTP status {}", resp.status()),
+            }),
+            Err(e) => Ok(VerifyKeyResponse {
+                ok: false,
+                provider: "ollama".to_string(),
+                message: format!("Could not connect to Ollama: {}. Make sure 'ollama serve' is running.", e),
+            }),
+        }
+    } else if payload.provider == "gemini" {
+        // Direct test against Gemini models list or generateContent endpoint
+        let model = payload.model.clone().unwrap_or_else(|| "gemini-2.5-flash".to_string());
+        let test_url = format!(
+            "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
+            model, key
+        );
+        let body = serde_json::json!({
+            "contents": [{
+                "parts": [{ "text": "ping" }]
+            }]
+        });
+        match ureq::post(&test_url)
+            .timeout(std::time::Duration::from_secs(10))
+            .send_json(body)
+        {
+            Ok(resp) if resp.status() == 200 => Ok(VerifyKeyResponse {
+                ok: true,
+                provider: "gemini".to_string(),
+                message: format!("Gemini API Key verified and active for {}!", model),
+            }),
+            Ok(resp) => Ok(VerifyKeyResponse {
+                ok: false,
+                provider: "gemini".to_string(),
+                message: format!("Gemini returned HTTP {}. Please verify the key and model permissions.", resp.status()),
+            }),
+            Err(ureq::Error::Status(code, resp)) => {
+                let err_text = resp.into_string().unwrap_or_default();
+                let detail = if code == 400 || code == 403 {
+                    "Invalid API key or unauthorized model access."
+                } else if code == 429 {
+                    "Quota limit exceeded (Rate limit / 429)."
+                } else {
+                    "API key verification failed."
+                };
+                Ok(VerifyKeyResponse {
+                    ok: false,
+                    provider: "gemini".to_string(),
+                    message: format!("Gemini error (HTTP {}): {} {}", code, detail, err_text),
+                })
+            }
+            Err(e) => Ok(VerifyKeyResponse {
+                ok: false,
+                provider: "gemini".to_string(),
+                message: format!("Network/connection error contacting Gemini: {}", e),
+            }),
+        }
+    } else {
+        // OpenAI / OpenRouter / Custom OpenAI-compatible endpoint
+        let endpoint = payload.api_url.clone().unwrap_or_else(|| {
+            if payload.provider == "openrouter" {
+                "https://openrouter.ai/api/v1/chat/completions".to_string()
+            } else {
+                "https://api.openai.com/v1/chat/completions".to_string()
+            }
+        });
+        let model = payload.model.clone().unwrap_or_else(|| {
+            if payload.provider == "openrouter" {
+                "google/gemini-2.5-flash".to_string()
+            } else {
+                "gpt-4o-mini".to_string()
+            }
+        });
+
+        let body = serde_json::json!({
+            "model": model,
+            "messages": [
+                { "role": "user", "content": "ping" }
+            ],
+            "max_tokens": 5
+        });
+
+        match ureq::post(&endpoint)
+            .set("Authorization", &format!("Bearer {}", key))
+            .timeout(std::time::Duration::from_secs(10))
+            .send_json(body)
+        {
+            Ok(resp) if resp.status() == 200 => Ok(VerifyKeyResponse {
+                ok: true,
+                provider: payload.provider.clone(),
+                message: format!("API Key verified successfully with {} ({})!", endpoint, model),
+            }),
+            Ok(resp) => Ok(VerifyKeyResponse {
+                ok: false,
+                provider: payload.provider.clone(),
+                message: format!("Endpoint returned unexpected status HTTP {}", resp.status()),
+            }),
+            Err(ureq::Error::Status(code, resp)) => {
+                let err_text = resp.into_string().unwrap_or_default();
+                let hint = if code == 401 {
+                    "Invalid API Key. Authentication failed (401 Unauthorized)."
+                } else if code == 403 {
+                    "Permission denied or model access restricted (403 Forbidden)."
+                } else if code == 429 {
+                    "Quota exceeded or rate-limited (429 Too Many Requests)."
+                } else {
+                    "Key rejected by server."
+                };
+                Ok(VerifyKeyResponse {
+                    ok: false,
+                    provider: payload.provider.clone(),
+                    message: format!("HTTP {}: {} {}", code, hint, err_text),
+                })
+            }
+            Err(e) => Ok(VerifyKeyResponse {
+                ok: false,
+                provider: payload.provider.clone(),
+                message: format!("Connection error: {}", e),
+            }),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AiResearchRequest {
     pub topic: String,
     pub mode: String, // "api" | "ollama" | "agent_research" | "agent_wiki"
@@ -78,7 +238,8 @@ pub fn research_topic(req: &AiResearchRequest) -> Result<AiResearchResponse, Str
 
     if req.mode == "api" {
         if let Some(ref key) = req.api_key {
-            if !key.trim().is_empty() {
+            let trimmed_key = key.trim();
+            if !trimmed_key.is_empty() {
                 let api_url = req.api_url.clone().unwrap_or_else(|| {
                     "https://api.openai.com/v1/chat/completions".to_string()
                 });
@@ -86,22 +247,34 @@ pub fn research_topic(req: &AiResearchRequest) -> Result<AiResearchResponse, Str
                     .model
                     .clone()
                     .unwrap_or_else(|| "gpt-4o-mini".to_string());
-                if let Ok(generated) = call_openai_compatible(
-                    &api_url,
-                    key,
-                    &model,
-                    &req.topic,
-                    &wiki_extract,
-                    &req.existing_titles,
-                ) {
-                    return Ok(format_ai_response(
+
+                let result = if api_url.contains("googleapis.com") {
+                    call_gemini_direct(trimmed_key, &model, &req.topic, &wiki_extract, &req.existing_titles)
+                } else {
+                    call_openai_compatible(
+                        &api_url,
+                        trimmed_key,
+                        &model,
                         &req.topic,
-                        &generated,
-                        vec![wiki_url],
-                        &format!("cloud-api ({})", model),
-                        agent_prompt,
+                        &wiki_extract,
                         &req.existing_titles,
-                    ));
+                    )
+                };
+
+                match result {
+                    Ok(generated) => {
+                        return Ok(format_ai_response(
+                            &req.topic,
+                            &generated,
+                            vec![wiki_url],
+                            &format!("cloud-api ({})", model),
+                            agent_prompt,
+                            &req.existing_titles,
+                        ));
+                    }
+                    Err(e) => {
+                        return Err(format!("AI Synthesis Error with key: {}", e));
+                    }
                 }
             }
         }
@@ -177,6 +350,50 @@ Reference context: {}",
         .and_then(|r| r.as_str())
         .map(|s| s.trim().to_string())
         .ok_or_else(|| "Empty Ollama response".to_string())
+}
+
+fn call_gemini_direct(
+    api_key: &str,
+    model: &str,
+    topic: &str,
+    context: &str,
+    existing_titles: &[String],
+) -> Result<String, String> {
+    let links_hint = existing_titles
+        .iter()
+        .take(12)
+        .cloned()
+        .collect::<Vec<_>>()
+        .join(", ");
+    let prompt = format!(
+        "Write a concise synthesis about '{}' in English. \
+Use [[Links]] for related terms ({}). \
+Wrap key claims in ==[AI] ...==. Grounding context: {}",
+        topic, links_hint, context
+    );
+    let url = format!(
+        "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
+        model, api_key
+    );
+    let body = serde_json::json!({
+        "contents": [{
+            "parts": [{ "text": prompt }]
+        }]
+    });
+    let resp = ureq::post(&url)
+        .timeout(std::time::Duration::from_secs(30))
+        .send_json(body)
+        .map_err(|e| format!("Gemini error: {}", e))?;
+    let json: serde_json::Value = resp.into_json().map_err(|e| e.to_string())?;
+    json.get("candidates")
+        .and_then(|c| c.get(0))
+        .and_then(|first| first.get("content"))
+        .and_then(|cnt| cnt.get("parts"))
+        .and_then(|p| p.get(0))
+        .and_then(|p0| p0.get("text"))
+        .and_then(|t| t.as_str())
+        .map(|s| s.trim().to_string())
+        .ok_or_else(|| "Gemini returned empty candidate response".to_string())
 }
 
 fn call_openai_compatible(
